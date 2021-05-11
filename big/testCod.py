@@ -202,7 +202,7 @@ if __name__ == '__main__':
 	callbacks = [
 		EarlyStopping(patience=15, verbose=2),
 		ReduceLROnPlateau(factor=0.1, patience=5, min_lr=0.00001, verbose=2),
-		ModelCheckpoint('models/models_256/model.h5', verbose=2, save_best_only=True, save_weights_only=True)
+		ModelCheckpoint('../models/models_256/model.h5', verbose=2, save_best_only=True, save_weights_only=True)
 	]
 
 	results = model.fit(X_train, y_train, batch_size=16, epochs=60, callbacks=callbacks, validation_data=(X_valid, y_valid))
