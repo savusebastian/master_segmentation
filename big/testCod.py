@@ -179,9 +179,9 @@ if __name__ == '__main__':
 
 	# Convert images & masks to arrays
 	for image in images:
-		img_orig = np.array(Image.open(f'aerial_image_dataset/training/images/{image}').resize((256, 256)))
+		img_orig = np.array(Image.open(f'aerial_image_dataset/training/images/{image}').convert('L').resize((256, 256)))
 		x_img = np.reshape(img_orig, (256, 256, 1))
-		mask_orig = np.array(Image.open(f'aerial_image_dataset/training/gt/{image}').resize((256, 256)))
+		mask_orig = np.array(Image.open(f'aerial_image_dataset/training/gt/{image}').convert('L').resize((256, 256)))
 		mask = np.reshape(mask_orig, (256, 256, 1))
 
 		X[index] = x_img / 255.0
