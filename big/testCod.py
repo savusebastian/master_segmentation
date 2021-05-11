@@ -170,7 +170,7 @@ if __name__ == '__main__':
 		plt.legend()
 		plt.show()
 
-	images = os.listdir('aerial_images_256/acoperis')
+	images = os.listdir('aerial_image_dataset/training')
 	np.random.shuffle(images)
 	X = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
 	y = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
@@ -179,9 +179,9 @@ if __name__ == '__main__':
 
 	# Convert images & masks to arrays
 	for image in images:
-		img_orig = np.array(Image.open(f'aerial_images_256/acoperis/{image}').resize((256, 256)))
+		img_orig = np.array(Image.open(f'aerial_image_dataset/training/images/{image}').resize((256, 256)))
 		x_img = np.reshape(img_orig, (256, 256, 3))
-		mask_orig = np.array(Image.open(f'aerial_images_256/acoperis_masks/{image}').resize((256, 256)))
+		mask_orig = np.array(Image.open(f'aerial_image_dataset/training/gt/{image}').resize((256, 256)))
 		mask = np.reshape(mask_orig, (256, 256, 3))
 
 		X[index] = x_img / 255.0
@@ -196,7 +196,7 @@ if __name__ == '__main__':
 
 	input_img = (256, 256, 3)
 	model = get_unet(input_img)
-	model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['acc'])
+	model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy'])
 	model.summary()
 
 	callbacks = [
@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
 	results = model.fit(X_train, y_train, batch_size=16, epochs=60, callbacks=callbacks, validation_data=(X_valid, y_valid))
 
-	# Plot Loss vs Epoch
+	# # Plot Loss vs Epoch
 	# plt.figure()
 	# plt.title('Learning curve')
 	# plt.plot(results.history['loss'], label='loss')
@@ -217,20 +217,18 @@ if __name__ == '__main__':
 	# plt.ylabel('log_loss')
 	# plt.legend()
 	# plt.show()
-
-	# Plot Accuracy vs Epoch
-	# acc = results.history['acc']
-	# val_acc = results.history['val_acc']
-	# epochs = range(len(acc))
+	#
+	# # Plot Accuracy vs Epoch
+	# epochs = range(len(results.history['accuracy']))
 	# plt.figure()
 	# plt.title('Training and validation accuracy')
-	# plt.plot(epochs, acc, label='Training acc')
-	# plt.plot(epochs, val_acc, label='Validation acc')
+	# plt.plot(epochs, results.history['accuracy'], label='Training acc')
+	# plt.plot(epochs, results.history['val_accuracy'], label='Validation acc')
 	# plt.legend()
 	# plt.show()
 
 	# Load the best model
-	model.load_weights('models/models_256/model_8_3.h5')
+	model.load_weights('unet-20.hdf5')
 
 	# Evaluate on validation set (this must be equals to the best log_loss)
 	model.evaluate(X_valid, y_valid, verbose=2)
