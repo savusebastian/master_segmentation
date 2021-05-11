@@ -172,17 +172,17 @@ if __name__ == '__main__':
 
 	images = os.listdir('aerial_image_dataset/training/images')
 	np.random.shuffle(images)
-	X = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
-	y = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
+	X = np.zeros((len(images), 256, 256, 1), dtype=np.float32)
+	y = np.zeros((len(images), 256, 256, 1), dtype=np.float32)
 	index = 0
 	print('Number of images:', len(images))
 
 	# Convert images & masks to arrays
 	for image in images:
-		x_img = np.array(Image.open(f'aerial_image_dataset/training/images/{image}').resize((256, 256)))
-		# x_img = np.reshape(img_orig, (256, 256, 3))
-		mask = np.array(Image.open(f'aerial_image_dataset/training/gt/{image}').resize((256, 256)))
-		# mask = np.reshape(mask_orig, (256, 256, 3))
+		img_orig = np.array(Image.open(f'aerial_image_dataset/training/images/{image}').resize((256, 256)))
+		x_img = np.reshape(img_orig, (256, 256, 1))
+		mask_orig = np.array(Image.open(f'aerial_image_dataset/training/gt/{image}').resize((256, 256)))
+		mask = np.reshape(mask_orig, (256, 256, 1))
 
 		X[index] = x_img / 255.0
 		y[index] = mask / 255.0
@@ -194,7 +194,7 @@ if __name__ == '__main__':
 	X_train, X_valid, X_test = X[:train_index], X[train_index:train_index + valid_index], X[train_index + valid_index:]
 	y_train, y_valid, y_test = y[:train_index], y[train_index:train_index + valid_index], y[train_index + valid_index:]
 
-	input_img = (256, 256, 3)
+	input_img = (256, 256, 1)
 	model = get_unet(input_img)
 	model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy'])
 	model.summary()
