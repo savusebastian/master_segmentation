@@ -61,43 +61,43 @@ def get_unet(input_shape):
 
 
 if __name__ == '__main__':
-	os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+	# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 	# config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.95))
 	# config.gpu_options.allow_growth = True
 	# session = tf.compat.v1.Session(config=config)
-	print('predict test data')
-	model = get_unet((256, 256, 3))
-	model.load_weights('models/unet.hdf5')
-	img_test = Image.open('aerial_image_dataset/validation/images/austin162.png')
-	img_test = np.array(img_test.resize((256, 256)))
-	plt.figure(1)
-	plt.imshow(img_test.astype(dtype=np.uint8), vmin=0, vmax=255)
-
-	img_test_pred = img_test.astype(dtype=np.float32)
-	img_test_pred /= 255.0
-
-	img = np.zeros((1, 256, 256, 3))
-	img[0, :, :, :] = np.copy(img_test_pred)
-	imgs_mask_test = model.predict(img)
-	imgs_mask_test = imgs_mask_test[0, :, :, 0]
-
-	mask = np.floor(imgs_mask_test * 255)
-
-	imgs_mask_test[imgs_mask_test <= 0.5] = 0
-	imgs_mask_test[imgs_mask_test > 0.5] = 1
-
-	plt.figure(2)
-	plt.imshow(imgs_mask_test.astype(dtype=np.uint8), vmin=0, vmax=1)
-
-	for i in range(256):
-		for j in range(256):
-			if imgs_mask_test[i, j] == 1:
-				img_test[i, j, :] = 0
-
-	plt.figure(2)
-	plt.imshow(img_test)
-	plt.show()
+	# print('predict test data')
+	# model = get_unet((256, 256, 3))
+	# model.load_weights('models/unet.hdf5')
+	# img_test = Image.open('aerial_image_dataset/validation/images/austin162.png')
+	# img_test = np.array(img_test.resize((256, 256)))
+	# plt.figure(1)
+	# plt.imshow(img_test.astype(dtype=np.uint8), vmin=0, vmax=255)
+	#
+	# img_test_pred = img_test.astype(dtype=np.float32)
+	# img_test_pred /= 255.0
+	#
+	# img = np.zeros((1, 256, 256, 3))
+	# img[0, :, :, :] = np.copy(img_test_pred)
+	# imgs_mask_test = model.predict(img)
+	# imgs_mask_test = imgs_mask_test[0, :, :, 0]
+	#
+	# mask = np.floor(imgs_mask_test * 255)
+	#
+	# imgs_mask_test[imgs_mask_test <= 0.5] = 0
+	# imgs_mask_test[imgs_mask_test > 0.5] = 1
+	#
+	# plt.figure(2)
+	# plt.imshow(imgs_mask_test.astype(dtype=np.uint8), vmin=0, vmax=1)
+	#
+	# for i in range(256):
+	# 	for j in range(256):
+	# 		if imgs_mask_test[i, j] == 1:
+	# 			img_test[i, j, :] = 0
+	#
+	# plt.figure(2)
+	# plt.imshow(img_test)
+	# plt.show()
 
 
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 		y_train_mod = train.squeeze() > binarize
 
 		# Set up Predicted Mask for IOU calculation
-		preds_train_mod = np.zeros((size, 128, 128), dtype=np.int32)
+		preds_train_mod = np.zeros((size, 256, 256), dtype=np.int32)
 		preds_train_sq = preds_train.squeeze()
 
 		thresholds = np.linspace(0.0001, 1, 50)
@@ -170,40 +170,95 @@ if __name__ == '__main__':
 		plt.legend()
 		plt.show()
 
+	images = os.listdir('aerial_images_256/acoperis')
+	np.random.shuffle(images)
+	X = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
+	y = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
+	index = 0
+	print('Number of images:', len(images))
+
+	# Convert images & masks to arrays
+	for image in images:
+		img_orig = np.array(Image.open(f'aerial_images_256/acoperis/{image}').resize((256, 256)))
+		x_img = np.reshape(img_orig, (256, 256, 3))
+		mask_orig = np.array(Image.open(f'aerial_images_256/acoperis_masks/{image}').resize((256, 256)))
+		mask = np.reshape(mask_orig, (256, 256, 3))
+
+		X[index] = x_img / 255.0
+		y[index] = mask / 255.0
+		index += 1
+
+	# Split data
+	train_index = int(0.8 * len(X)) - 1
+	valid_index = len(X) - int(0.9 * len(X))
+	X_train, X_valid, X_test = X[:train_index], X[train_index:train_index + valid_index], X[train_index + valid_index:]
+	y_train, y_valid, y_test = y[:train_index], y[train_index:train_index + valid_index], y[train_index + valid_index:]
+
+	input_img = (256, 256, 3)
+	model = get_unet(input_img)
+	model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['acc'])
+	model.summary()
+
+	callbacks = [
+		EarlyStopping(patience=15, verbose=2),
+		ReduceLROnPlateau(factor=0.1, patience=5, min_lr=0.00001, verbose=2),
+		ModelCheckpoint('models/models_256/model.h5', verbose=2, save_best_only=True, save_weights_only=True)
+	]
+
+	results = model.fit(X_train, y_train, batch_size=16, epochs=60, callbacks=callbacks, validation_data=(X_valid, y_valid))
+
+	# Plot Loss vs Epoch
+	# plt.figure()
+	# plt.title('Learning curve')
+	# plt.plot(results.history['loss'], label='loss')
+	# plt.plot(results.history['val_loss'], label='val_loss')
+	# plt.plot(np.argmin(results.history['val_loss']), np.min(results.history['val_loss']), marker='x', label='best model')
+	# plt.xlabel('Epochs')
+	# plt.ylabel('log_loss')
+	# plt.legend()
+	# plt.show()
+
+	# Plot Accuracy vs Epoch
+	# acc = results.history['acc']
+	# val_acc = results.history['val_acc']
+	# epochs = range(len(acc))
+	# plt.figure()
+	# plt.title('Training and validation accuracy')
+	# plt.plot(epochs, acc, label='Training acc')
+	# plt.plot(epochs, val_acc, label='Validation acc')
+	# plt.legend()
+	# plt.show()
+
 	# Load the best model
-	model.load_weights('unet-20.hdf5')
+	model.load_weights('models/models_256/model_8_3.h5')
 
 	# Evaluate on validation set (this must be equals to the best log_loss)
-	# model.evaluate(dataset['train'], dataset['val'], verbose=2)
+	model.evaluate(X_valid, y_valid, verbose=2)
 
 	# Evaluate on validation set (this must be equals to the best log_loss)
-	# model.evaluate(X_test, y_test, verbose=2)
+	model.evaluate(X_test, y_test, verbose=2)
 
 	# Predict on train, val and test
-	img_test = Image.open('aerial_image_dataset/validation/images/austin162.png').convert('L')
-	preds_train = model.predict(img_test, verbose=2)
-	# preds_val = model.predict(dataset['val'], verbose=2)
-	ix = np.random.randint(len(preds_train))
-	# preds_test = model.predict(X_test, verbose=2)
+	preds_train = model.predict(X_train, verbose=2)
+	preds_val = model.predict(X_valid, verbose=2)
+	preds_test = model.predict(X_test, verbose=2)
 
 	# Threshold predictions
 	threshold = .408
-	# preds_train_t = (img > threshold).astype(np.uint8)
-	# preds_val_t = (dataset['val'] > threshold).astype(np.uint8)
-	# preds_test_t = (preds_test > threshold).astype(np.uint8)
+	preds_train_t = (preds_train > threshold).astype(np.uint8)
+	preds_val_t = (preds_val > threshold).astype(np.uint8)
+	preds_test_t = (preds_test > threshold).astype(np.uint8)
 
-	# ix = np.random.randint(len(preds_val))
-	# plot_sample(X_test, y_test, preds_test, preds_test_t, ix=ix)
+	ix = np.random.randint(len(preds_val))
+	plot_sample(X_test, y_test, preds_test, preds_test_t, ix=ix)
 
 	threshold = .4082
 	binarize = .1
-	intersection = np.logical_and(img_test.squeeze() > binarize, preds_train.squeeze() > threshold)
-	print('Intersection:', intersection)
-	union = np.logical_or(img_test.squeeze() > binarize, preds_train.squeeze() > threshold)
-	print('Union:', union)
+	intersection = np.logical_and(y_test[ix].squeeze() > binarize, preds_test[ix].squeeze() > threshold)
+	union = np.logical_or(y_test[ix].squeeze() > binarize, preds_test[ix].squeeze() > threshold)
 	iou = np.sum(intersection) / np.sum(union)
 	print('IOU:', iou)
 
-	# calc_iou_plot(dataset['val'], dataset['val'])
-	# calc_iou_plot(y_valid, y_valid)
-	# calc_iou_plot(y_test, y_test)
+	calc_iou_plot(y_train, y_valid)
+	calc_iou_plot(y_valid, y_valid)
+	calc_iou_plot(y_test, y_test)
