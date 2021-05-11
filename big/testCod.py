@@ -170,7 +170,7 @@ if __name__ == '__main__':
 		plt.legend()
 		plt.show()
 
-	images = os.listdir('aerial_image_dataset/training')
+	images = os.listdir('aerial_image_dataset/training/images')
 	np.random.shuffle(images)
 	X = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
 	y = np.zeros((len(images), 256, 256, 3), dtype=np.float32)
