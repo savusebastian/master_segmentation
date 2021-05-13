@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import Activation, BatchNormalization, Concatenate, Conv2D, Input, MaxPool2D, UpSampling2D
+from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 
 
