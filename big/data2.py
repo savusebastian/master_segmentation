@@ -3,7 +3,7 @@ import os
 
 from tensorflow.keras.optimizers import Adam
 from PIL import Image
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 import matplotlib.pyplot as plt
