@@ -127,7 +127,7 @@ def get_efficientnet(input_shape):
 		return sa
 
 	# Module 1
-	def module1(input):
+	def module1(input, kernel_size):
 		# depthconv2d
 		m1d = tensorflow.keras.layers.DepthwiseConv2D(kernel_size)(input)
 		# batch normalization
@@ -138,7 +138,7 @@ def get_efficientnet(input_shape):
 		return m1a
 
 	# Module 2
-	def module2(input):
+	def module2(input, kernel_size):
 		# depthconv2d
 		m2d = tensorflow.keras.layers.DepthwiseConv2D(kernel_size)(input)
 		# batch normalization
@@ -157,7 +157,7 @@ def get_efficientnet(input_shape):
 		return m2a
 
 	# Module 3
-	def module3(input):
+	def module3(input, filters, kernel_size):
 		# global averrage pooling
 		m3gap = tensorflow.keras.layers.GlobalAveragePolling2D()(input)
 		# rescale
@@ -170,7 +170,7 @@ def get_efficientnet(input_shape):
 		return m3c
 
 	# Final layer
-	def final(input):
+	def final(input, filters, kernel_size):
 		# Conv2D
 		fc = tensorflow.keras.layers.Conv2D(filters, kernel_size)(m3c)
 		# batch normalization
@@ -184,39 +184,39 @@ def get_efficientnet(input_shape):
 	# Stem
 	stem = stem(input_shape)
 	# M1 - block 1
-	b1 = module1(stem)
+	b1 = module1(stem, 3)
 	# M2, M3, Add - block 2
-	m2 = module2(b1)
-	m3 = module3(m2)
+	m2 = module2(b1, 3)
+	m3 = module3(m2, 24, 3)
 	b2 = tensorflow.keras.layers.Add()([m2, m3])
 	# M2, M3, Add - block 3
-	m2 = module2(b2)
-	m3 = module3(m2)
+	m2 = module2(b2, 5)
+	m3 = module3(m2, 40, 5)
 	b3 = tensorflow.keras.layers.Add()([m2, m3])
 	# M2, M3, Add, M3, Add - block 4
-	m2 = module2(b3)
-	m3 = module3(m2)
+	m2 = module2(b3, 3)
+	m3 = module3(m2, 80, 3)
 	a4 = tensorflow.keras.layers.Add()([m2, m3])
-	m3 = module3(a4)
+	m3 = module3(a4, 80, 3)
 	b4 = tensorflow.keras.layers.Add()([a4, m3])
 	# M2, M3, Add, M3, Add - block 5
-	m2 = module2(b4)
-	m3 = module3(m2)
+	m2 = module2(b4, 5)
+	m3 = module3(m2, 112, 5)
 	a5 = tensorflow.keras.layers.Add()([m2, m3])
-	m3 = module3(a5)
+	m3 = module3(a5, 112, 5)
 	b5 = tensorflow.keras.layers.Add()([a5, m3])
 	# M2, M3, Add, M3, Add, M3, Add - block 6
-	m2 = module2(b5)
-	m3 = module3(m2)
+	m2 = module2(b5, 5)
+	m3 = module3(m2, 192, 5)
 	a6 = tensorflow.keras.layers.Add()([m2, m3])
-	m3 = module3(a6)
+	m3 = module3(a6, 192, 5)
 	a6 = tensorflow.keras.layers.Add()([a6, m3])
-	m3 = module3(a6)
+	m3 = module3(a6, 192, 5)
 	b6 = tensorflow.keras.layers.Add()([a6, m3])
 	# M2 - block 7
-	b7 = module2(b6)
+	b7 = module2(b6, 3)
 	# Final layer
-	f = final(b7)
+	f = final(b7, 1280, 3)
 
 	return f
 

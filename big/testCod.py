@@ -19,7 +19,8 @@ if __name__ == '__main__':
 	# config.gpu_options.allow_growth = True
 	# session = tf.compat.v1.Session(config=config)
 	print('predict test data')
-	model = get_unet((256, 256, 3))
+	# model = get_unet((256, 256, 3))
+	model = get_efficientnet((256, 256, 3))
 	model.load_weights('models/unet.hdf5')
 	img_test = Image.open('aerial_image_dataset/validation/images/austin162.png')
 	img_test = np.array(img_test.resize((256, 256)))
