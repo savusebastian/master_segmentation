@@ -48,6 +48,6 @@ if __name__ == '__main__':
 			if imgs_mask_test[i, j] == 1:
 				img_test[i, j, :] = 0
 
-	plt.figure(2)
+	plt.figure(3)
 	plt.imshow(img_test)
 	plt.show()
