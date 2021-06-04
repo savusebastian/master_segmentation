@@ -109,9 +109,9 @@ def get_unet(input_shape):
 def get_efficientnet(input_shape):
 	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
 	# Stem
-	def stem(input):
+	def stem(input, filters, kernel_size):
 		# input layer
-		si = Input(input, filters, kernel_size)
+		si = Input(input)
 		# rescale
 		sr = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(si)
 		# normalization
