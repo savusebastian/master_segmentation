@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
 	for i in range(256):
 		for j in range(256):
-			if imgs_mask_test[i, j] == 1:
+			if imgs_mask_test[i, j] != 1:
 				img_test[i, j, :] = 0
 
 	plt.figure(3)
