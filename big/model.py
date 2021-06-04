@@ -1,5 +1,6 @@
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
+import tensorflow as tf
 
 
 def conv_block(inputs, filters, pool=True):
