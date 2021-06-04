@@ -111,7 +111,7 @@ def get_efficientnet(input_shape):
 	# Stem
 	def stem(input):
 		# input layer
-		si = Input(input)
+		si = Input(input, filters, kernel_size)
 		# rescale
 		sr = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(si)
 		# normalization
@@ -183,7 +183,7 @@ def get_efficientnet(input_shape):
 
 	# Order
 	# Stem
-	stem = stem(input_shape)
+	stem = stem(input_shape, 32, 3)
 	# M1 - block 1
 	b1 = module1(stem, 3)
 	# M2, M3, Add - block 2
