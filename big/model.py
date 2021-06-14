@@ -142,25 +142,18 @@ def get_efficientnet(input_shape):
 	def module2(input, kernel_size):
 		# depthconv2d
 		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(input)
-		print(m2d.shape)
 		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
-		print(m2b.shape)
 		# activation
 		m2a = tf.keras.layers.ReLU()(m2b)
-		print(m2a.shape)
 		# zero padding
 		m2zp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(m2a)
-		print(m2zp.shape)
 		# depthconv2d
 		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(m2zp)
-		print(m2d.shape)
 		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
-		print(m2b.shape)
 		# activation
 		m2a = tf.keras.layers.ReLU()(m2b)
-		print(m2a.shape)
 
 		return m2a
 
@@ -179,6 +172,7 @@ def get_efficientnet(input_shape):
 
 	# Final layer
 	def final(input, filters, kernel_size):
+		print(input.shape)
 		# Conv2D
 		fc = tf.keras.layers.Conv2D(filters, kernel_size)(m3c)
 		# batch normalization
@@ -191,8 +185,10 @@ def get_efficientnet(input_shape):
 	# Order
 	# Stem
 	stem = stem(input_shape, 32, 3)
+	print(stem.shape)
 	# M1 - block 1
 	b1 = module1(stem, 3)
+	print(b1.shape)
 	# M2, M3, Add - block 2
 	m2 = module2(b1, 3)
 	m3 = module3(m2, 24, 3)
