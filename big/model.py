@@ -142,18 +142,25 @@ def get_efficientnet(input_shape):
 	def module2(input, kernel_size):
 		# depthconv2d
 		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(input)
+		print(m2d.shape)
 		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
+		print(m2b.shape)
 		# activation
 		m2a = tf.keras.layers.ReLU()(m2b)
+		print(m2a.shape)
 		# zero padding
 		m2zp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(m2a)
+		print(m2zp.shape)
 		# depthconv2d
 		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(m2zp)
+		print(m2d.shape)
 		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
+		print(m2b.shape)
 		# activation
-		# m2a = tf.keras.layers.ReLU()(m2b)
+		m2a = tf.keras.layers.ReLU()(m2b)
+		print(m2a.shape)
 
 		return m2a
 
