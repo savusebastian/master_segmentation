@@ -153,7 +153,7 @@ def get_efficientnet(input_shape):
 		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
 		# activation
-		m2a = tf.keras.layers.ReLU()(m2b)
+		# m2a = tf.keras.layers.ReLU()(m2b)
 
 		return m2a
 
