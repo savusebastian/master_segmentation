@@ -158,7 +158,7 @@ def get_efficientnet(input_shape):
 	# Final layer
 	def final(input, filters, kernel_size):
 		# convolution, batch normalization, activation
-		fc = tf.keras.layers.Conv2D(filters, kernel_size)(m3c)
+		fc = tf.keras.layers.Conv2D(filters, kernel_size)(input)
 		fb = tf.keras.layers.BatchNormalization()(fc)
 		fa = tf.keras.layers.ReLU()(fb)
 
