@@ -160,10 +160,10 @@ def get_efficientnet(input_shape):
 	# Module 3
 	def module3(input, filters, kernel_size):
 		# global averrage pooling
-		m3gap = tf.keras.layers.GlobalAveragePooling2D()(input)
-		print(m3gap.shape)
+		# m3gap = tf.keras.layers.GlobalAveragePooling2D()(input)
+		# print(m3gap.shape)
 		# rescale
-		m3r = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(m3gap)
+		m3r = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(input)
 		# Conv2D
 		m3c = tf.keras.layers.Conv2D(filters, kernel_size)(m3r)
 		# Conv2D
