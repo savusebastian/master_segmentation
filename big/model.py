@@ -108,124 +108,96 @@ def get_unet(input_shape):
 
 def get_efficientnet(input_shape):
 	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
-	# Stem
 	def stem(input, filters, kernel_size):
-		# input layer
+		# input layer, rescale, normalization, zero padding, convolution, batch normalization, activation
 		si = Input(input)
-		# rescale
 		sr = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(si)
-		# normalization
 		sn = tf.keras.layers.LayerNormalization(axis=[1, 2, 3])(sr)
-		# zero padding
 		szp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(sn)
-		# conv2d
 		sc = tf.keras.layers.Conv2D(filters, kernel_size)(szp)
-		# batch normalization
 		sb = tf.keras.layers.BatchNormalization()(sc)
-		# activation
 		sa = tf.keras.layers.ReLU()(sb)
 
 		return sa
 
-	# Module 1
 	def module1(input, kernel_size):
-		# depthconv2d
+		# depthconv2d, batch normalization, activation
 		m1d = tf.keras.layers.DepthwiseConv2D(kernel_size)(input)
-		# batch normalization
 		m1b = tf.keras.layers.BatchNormalization()(m1d)
-		# activation
 		m1a = tf.keras.layers.ReLU()(m1b)
 
 		return m1a
 
-	# Module 2
 	def module2(input, kernel_size):
-		# depthconv2d
+		# depthconv2d, batch normalization, activation, zero padding, depthconv2d, batch normalization, activation
 		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(input)
-		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
-		# activation
 		m2a = tf.keras.layers.ReLU()(m2b)
-		# zero padding
 		m2zp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(m2a)
-		# depthconv2d
 		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(m2zp)
-		# batch normalization
 		m2b = tf.keras.layers.BatchNormalization()(m2d)
-		# activation
 		m2a = tf.keras.layers.ReLU()(m2b)
 
 		return m2a
 
 	# Module 3
 	def module3(input, filters, kernel_size):
-		# global averrage pooling
+		# global averrage pooling, rescale, convolution, convolution
 		# m3gap = tf.keras.layers.GlobalAveragePooling2D()(input)
 		# print(m3gap.shape)
-		# rescale
 		m3r = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(input)
-		# Conv2D
 		m3c = tf.keras.layers.Conv2D(filters, kernel_size)(m3r)
-		# Conv2D
 		m3c = tf.keras.layers.Conv2D(filters, kernel_size)(m3c)
+
+		m3inputc = tf.keras.layers.Conv2D(filters, kernel_size)(input)
+		m3inputc = tf.keras.layers.Conv2D(filters, kernel_size)(m3inputc)
+		m3a = tf.keras.layers.Add()([m3c, m3inputc])
 
 		return m3c
 
 	# Final layer
 	def final(input, filters, kernel_size):
-		# Conv2D
+		# convolution, batch normalization, activation
 		fc = tf.keras.layers.Conv2D(filters, kernel_size)(m3c)
-		# batch normalization
 		fb = tf.keras.layers.BatchNormalization()(fc)
-		# activation
 		fa = tf.keras.layers.ReLU()(fb)
 
 		return fb
 
-	# Order
+
 	# Stem
 	stem = stem(input_shape, 32, 3)
-	# M1 - block 1
+
+	# Block 1 - M1
 	b1 = module1(stem, 3)
-	# M2, M3, Add - block 2
+
+	# Bblock 2 - M2, M3, Add
 	b2_m2 = module2(b1, 3)
-	b2_m3 = module3(b2_m2, 24, 3)
-	b2_s = tf.squeeze(b2_m2, [1, 2])
-	b2 = tf.keras.layers.Add()([b2_m3, b2_s])
-	# M2, M3, Add - block 3
+	b2 = module3(b2_m2, 24, 3)
+
+	# Block 3 - M2, M3, Add
 	b3_m2 = module2(b2, 5)
-	b3_m3 = module3(b3_m2, 40, 5)
-	b3_s = tf.squeeze(b3_m2, [1, 2])
-	b3 = tf.keras.layers.Add()([b3_m3, b3_s])
-	# M2, M3, Add, M3, Add - block 4
+	b3 = module3(b3_m2, 40, 5)
+
+	# Block 4 - M2, M3, Add, M3, Add
 	b4_m2 = module2(b3, 3)
 	b4_m3 = module3(b4_m2, 80, 3)
-	b4_s = tf.squeeze(b4_m2, [1, 2])
-	b4_a4 = tf.keras.layers.Add()([b4_m3, b4_s])
-	b4_m3 = module3(b4_a4, 80, 3)
-	b4_s = tf.squeeze(b4_a4, [1, 2])
-	b4 = tf.keras.layers.Add()([b4_m3, b4_s])
-	# M2, M3, Add, M3, Add - block 5
+	b4 = module3(b4_m3, 80, 3)
+
+	# Block 5 - M2, M3, Add, M3, Add
 	b5_m2 = module2(b4, 5)
 	b5_m3 = module3(b5_m2, 112, 5)
-	b5_s = tf.squeeze(b5_m2, [1, 2])
-	b5_a5 = tf.keras.layers.Add()([b5_m3, b5_s])
-	b5_m3 = module3(b5_a5, 112, 5)
-	b5_s = tf.squeeze(b5_a5, [1, 2])
-	b5 = tf.keras.layers.Add()([b5_m3, b5_s])
-	# M2, M3, Add, M3, Add, M3, Add - block 6
+	b5 = module3(b5_m3, 112, 5)
+
+	# Block 6 - M2, M3, Add, M3, Add, M3, Add
 	b6_m2 = module2(b5, 5)
 	b6_m3 = module3(b6_m2, 192, 5)
-	b6_s = tf.squeeze(b6_m2, [1, 2])
-	b6_a6 = tf.keras.layers.Add()([b6_m3, b6_s])
-	b6_m3 = module3(a6, 192, 5)
-	b6_s = tf.squeeze(b6_a6, [1, 2])
-	b6_a6 = tf.keras.layers.Add()([b6_m3, b6_s])
-	b6_m3 = module3(b6_a6, 192, 5)
-	b6_s = tf.squeeze(b6_a6, [1, 2])
-	b6 = tf.keras.layers.Add()([b6_m3, b6_s])
-	# M2 - block 7
+	b6_m3 = module3(b6_m3, 192, 5)
+	b6 = module3(b6_m3, 192, 5)
+
+	# Block 7 - M2
 	b7 = module2(b6, 3)
+
 	# Final layer
 	f = final(b7, 1280, 3)
 
