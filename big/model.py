@@ -108,10 +108,11 @@ def get_unet(input_shape):
 
 def get_efficientnet(input_shape):
 	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
+	i_s = Input(input_shape)
+
 	def stem(input, filters, kernel_size):
 		# input layer, rescale, normalization, zero padding, convolution, batch normalization, activation
-		si = Input(input)
-		sr = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(si)
+		sr = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(input)
 		sn = tf.keras.layers.LayerNormalization(axis=[1, 2, 3])(sr)
 		szp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(sn)
 		sc = tf.keras.layers.Conv2D(filters, kernel_size)(szp)
@@ -163,7 +164,7 @@ def get_efficientnet(input_shape):
 		return fb
 
 	# Stem
-	stem = stem(input_shape, 32, 3)
+	stem = stem(i_s, 32, 3)
 
 	# Block 1 - M1
 	b1 = module1(stem, 3)
@@ -198,7 +199,7 @@ def get_efficientnet(input_shape):
 	# Final layer
 	f = final_layer(b7, 1280, 3)
 
-	return Model(Input(input_shape), f)
+	return Model(i_s, f)
 
 
 if __name__ == '__main__':
