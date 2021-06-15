@@ -140,7 +140,6 @@ def get_efficientnet(input_shape):
 
 		return m2a
 
-	# Module 3
 	def module3(input, filters, kernel_size):
 		# global averrage pooling, rescale, convolution, convolution
 		# m3gap = tf.keras.layers.GlobalAveragePooling2D()(input)
@@ -155,8 +154,7 @@ def get_efficientnet(input_shape):
 
 		return m3c
 
-	# Final layer
-	def final(input, filters, kernel_size):
+	def final_layer(input, filters, kernel_size):
 		# convolution, batch normalization, activation
 		fc = tf.keras.layers.Conv2D(filters, kernel_size)(input)
 		fb = tf.keras.layers.BatchNormalization()(fc)
@@ -199,9 +197,9 @@ def get_efficientnet(input_shape):
 	b7 = module2(b6, 3)
 
 	# Final layer
-	f = final(b7, 1280, 3)
+	f = final_layer(b7, 1280, 3)
 
-	return f
+	return tf.keras.models.Model(Input(input_shape), f)
 
 
 if __name__ == '__main__':
