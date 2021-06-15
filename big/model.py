@@ -186,9 +186,9 @@ def get_efficientnet(input_shape):
 	# Stem
 	stem = stem(input_shape, 32, 3)
 	# M1 - block 1
-	b1_m1 = module1(stem, 3)
+	b1 = module1(stem, 3)
 	# M2, M3, Add - block 2
-	b2_m2 = module2(b2_b1, 3)
+	b2_m2 = module2(b1, 3)
 	b2_m3 = module3(b2_m2, 24, 3)
 	b2_rm = tf.reduce_mean(b2_m2, [1, 2], keepdims=True)
 	b2 = tf.keras.layers.Add()([b2_m3, b2_rm])
