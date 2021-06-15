@@ -162,7 +162,6 @@ def get_efficientnet(input_shape):
 
 		return fb
 
-
 	# Stem
 	stem = stem(input_shape, 32, 3)
 
@@ -199,7 +198,7 @@ def get_efficientnet(input_shape):
 	# Final layer
 	f = final_layer(b7, 1280, 3)
 
-	return tf.keras.models.Model(Input(input_shape), f)
+	return Model(Input(input_shape), f)
 
 
 if __name__ == '__main__':
