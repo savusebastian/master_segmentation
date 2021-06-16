@@ -241,7 +241,8 @@ def get_unet_efficientnet(input_shape):
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
-	output = Conv2D(1, 1, activation='sigmoid')(conv9)
+	# output = Conv2D(1, 1, activation='sigmoid')(conv9)
+	output = Conv2D(1, 1, activation='softmax')(conv9)
 
 	return Model(i_s, output)
 
