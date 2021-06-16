@@ -220,7 +220,8 @@ def get_unet_efficientnet(input_shape):
 	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
 	# drop5 = Dropout(0.5)(conv5)
 
-	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(f))
+	# up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(f))
+	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(f)
 	# merge6 = Concatenate(axis=3) ([drop4, up6])
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(up6)
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
@@ -241,8 +242,7 @@ def get_unet_efficientnet(input_shape):
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
-	# output = Conv2D(1, 1, activation='sigmoid')(conv9)
-	output = Conv2D(1, 1, activation='softmax')(conv9)
+	output = Conv2D(1, 1, activation='sigmoid')(conv9)
 
 	return Model(i_s, output)
 

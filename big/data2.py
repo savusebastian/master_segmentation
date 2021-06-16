@@ -121,7 +121,7 @@ if __name__ == '__main__':
 	# model = build_unet((256, 256, 3), 1)
 	# model = get_unet(input_size)
 	model = get_unet_efficientnet(input_size)
-	model.compile(optimizer=Adam(learning_rate=0.001), loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
+	model.compile(optimizer=Adam(learning_rate=0.001), loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
 	# model.summary()
 	# model_checkpoint = ModelCheckpoint('unet-{epoch:02d}.hdf5', monitor='loss', verbose=1)
 	model_checkpoint = ModelCheckpoint('efficientnet.hdf5', monitor='loss', verbose=1)
