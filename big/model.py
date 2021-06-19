@@ -106,145 +106,183 @@ def get_unet(input_shape):
 	return Model(inputs, output)
 
 
-def get_unet_efficientnet(input_shape):
+def get_efficientnet_unet(input_shape):
+	# Efficientnet b0 as contracting path for unet
 	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
+	# https://python.plainenglish.io/implementing-efficientnet-in-pytorch-part-3-mbconv-squeeze-and-excitation-and-more-4ca9fd62d302
 	i_s = Input(input_shape)
 
-	def stem(input, filters, kernel_size):
-		# input layer, rescale, normalization, zero padding, convolution, batch normalization, activation
-		sr = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(input)
-		sn = tf.keras.layers.LayerNormalization(axis=[1, 2, 3])(sr)
-		szp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(sn)
-		sc = tf.keras.layers.Conv2D(filters, kernel_size)(szp)
-		sb = tf.keras.layers.BatchNormalization()(sc)
-		sa = tf.keras.layers.ReLU()(sb)
+	# class ConvBnAct(nn.Module):
+	#   """Layer grouping a convolution, batchnorm, and activation function"""
+	#   def __init__(self, n_in, n_out, kernel_size=3, stride=1, padding=0, groups=1, bias=False, bn=True, act=True):
+	#     self.conv = nn.Conv2d(n_in, n_out, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=bias)
+	#     self.bn = nn.BatchNorm2d(n_out) if bn else nn.Identity()
+	#     self.act = nn.SiLU() if act else nn.Identity()
 
-		return sa
 
-	def module1(input, kernel_size):
-		# depthconv2d, batch normalization, activation
-		m1d = tf.keras.layers.DepthwiseConv2D(kernel_size)(input)
-		m1b = tf.keras.layers.BatchNormalization()(m1d)
-		m1a = tf.keras.layers.ReLU()(m1b)
+	def c_bn_a(input_shape, filters, kernel_size=3, stride=1, padding=0, groups=1, bias=False, act=True):
+		# convolution, batch_normalization, activation
+		c2d = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, stride=stride, padding=padding)(input_shape)
+		bn = tf.keras.layers.BatchNormalization()(c2d)
+		a = tf.keras.layers.SiLU()(bn) if act else tf.identity()(bn)
 
-		return m1a
+		return a
 
-	def module2(input, kernel_size):
-		# depthconv2d, batch normalization, activation, zero padding, depthconv2d, batch normalization, activation
-		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(input)
-		m2b = tf.keras.layers.BatchNormalization()(m2d)
-		m2a = tf.keras.layers.ReLU()(m2b)
-		m2zp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(m2a)
-		m2d = tf.keras.layers.DepthwiseConv2D(kernel_size)(m2zp)
-		m2b = tf.keras.layers.BatchNormalization()(m2d)
-		m2a = tf.keras.layers.ReLU()(m2b)
+	# class SEBlock(nn.Module):
+	#   """Squeeze-and-excitation block"""
+	#   def __init__(self, n_in, r=24):
+	#     self.squeeze = nn.AdaptiveAvgPool2d(1)
+	#     self.excitation = nn.Sequential(nn.Conv2d(n_in, n_in//r, kernel_size=1),
+	#                                     nn.SiLU(),
+	#                                     nn.Conv2d(n_in//r, n_in, kernel_size=1),
+	#                                     nn.Sigmoid())
 
-		return m2a
 
-	def module3(input, filters, kernel_size):
-		# global averrage pooling, rescale, convolution, convolution
-		# m3gap = tf.keras.layers.GlobalAveragePooling2D()(input)
-		# print(m3gap.shape)
-		m3r = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1./255)(input)
-		m3c = tf.keras.layers.Conv2D(filters, kernel_size)(m3r)
-		m3c = tf.keras.layers.Conv2D(filters, kernel_size)(m3c)
+	def s_e_(input_shape, filters, r=24)
+		# For other output sizes in Keras, you need to use AveragePooling2D, but you can't specify the output shape directly. You need to calculate/define the pool_size, stride, and padding parameters depending on how you want the output shape. If you need help with the calculations, check this page of CS231n course.
+		# https://cs231n.github.io/convolutional-networks/#pool
+		ap2d = tf.keras.layers.AverragePooling2D()(input_shape)
+		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
+		silu = tf.keras.layers.SiLU()(c2d1)
+		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(silu)
+		sig = tf.keras.layers.Sigmoid()(c2d2)
 
-		m3inputc = tf.keras.layers.Conv2D(filters, kernel_size)(input)
-		m3inputc = tf.keras.layers.Conv2D(filters, kernel_size)(m3inputc)
-		m3a = tf.keras.layers.Add()([m3c, m3inputc])
+		return input_shape * sig
 
-		return m3c
-
-	def final_layer(input, filters, kernel_size):
-		# convolution, batch normalization, activation
-		fc = tf.keras.layers.Conv2D(filters, kernel_size)(input)
-		fb = tf.keras.layers.BatchNormalization()(fc)
-		fa = tf.keras.layers.ReLU()(fb)
-
-		return fb
-
-	# Stem
-	stem = stem(i_s, 32, 3)
-
-	# Block 1 - M1
-	b1 = module1(stem, 3)
-
-	# Bblock 2 - M2, M3, Add
-	b2_m2 = module2(b1, 3)
-	b2 = module3(b2_m2, 24, 3)
-
-	# Block 3 - M2, M3, Add
-	b3_m2 = module2(b2, 5)
-	b3 = module3(b3_m2, 40, 5)
-
-	# Block 4 - M2, M3, Add, M3, Add
-	b4_m2 = module2(b3, 3)
-	b4_m3 = module3(b4_m2, 80, 3)
-	b4 = module3(b4_m3, 80, 3)
-
-	# Block 5 - M2, M3, Add, M3, Add
-	b5_m2 = module2(b4, 5)
-	b5_m3 = module3(b5_m2, 112, 5)
-	b5 = module3(b5_m3, 112, 5)
-
-	# Block 6 - M2, M3, Add, M3, Add, M3, Add
-	b6_m2 = module2(b5, 5)
-	b6_m3 = module3(b6_m2, 192, 5)
-	b6_m3 = module3(b6_m3, 192, 5)
-	b6 = module3(b6_m3, 192, 5)
-
-	# Block 7 - M2
-	b7 = module2(b6, 3)
-
-	# Final layer
-	# f = final_layer(b7, 1280, 3)
-	f = final_layer(b7, 1024, 3)
-
-	# conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(inputs)
-	# conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv1)
-	# pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+	# class DropSample(nn.Module):
+	#   """Drops each sample in x with probability p during training"""
+	#   def __init__(self, p=0):
+	#   def forward(self, x):
+	#     if (not self.p) or (not self.training):
+	#       return x
 	#
-	# conv2 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool1)
-	# conv2 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv2)
-	# pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+	#     batch_size = len(x)
+	#     random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
+	#     bit_mask = self.p<random_tensor
 	#
-	# conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool2)
-	# conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv3)
-	# pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-	#
-	# conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool3)
-	# conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv4)
-	# drop4 = Dropout(0.5)(conv4)
-	# pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
-	#
-	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
-	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
-	# drop5 = Dropout(0.5)(conv5)
+	#     x = x.div(1-self.p)
+	#     x = x * bit_mask
+	#     return x
 
-	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(f))
-	# merge6 = Concatenate(axis=3) ([drop4, up6])
-	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(up6)
+	def drop_sample(input_shape, p=0):
+		# Drops each sample in x with probability p during training
+		batch_size = len(input_shape)
+		# random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
+		bit_mask = p < random_tensor
+
+		input_shape = input_shape.div(1 - p)
+		input_shape *= bit_mask
+
+		return input_shape
+
+	# class MBConvN(nn.Module):
+	#   """MBConv with an expansion factor of N, plus squeeze-and-excitation"""
+	#   def __init__(self, n_in, n_out, expansion_factor, kernel_size=3, stride=1, r=24, p=0):
+	#     super().__init__()
+	#
+	#     padding = (kernel_size-1)//2
+	#     expanded = expansion_factor*n_in
+	#     self.skip_connection = (n_in == n_out) and (stride == 1)
+	#
+	#     self.expand_pw = nn.Identity() if (expansion_factor == 1) else ConvBnAct(n_in, expanded, kernel_size=1)
+	#     self.depthwise = ConvBnAct(expanded, expanded, kernel_size=kernel_size, stride=stride, padding=padding, groups=expanded)
+	#     self.se = SEBlock(expanded, r=r)
+	#     self.reduce_pw = ConvBnAct(expanded, n_out, kernel_size=1, act=False)
+	#     self.dropsample = DropSample(p)
+	#
+	#   def forward(self, x):
+	#     residual = x
+	#
+	#     x = self.expand_pw(x)
+	#     x = self.depthwise(x)
+	#     x = self.se(x)
+	#     x = self.reduce_pw(x)
+	#
+	#     if self.skip_connection:
+	#       x = self.dropsample(x)
+	#       x = x + residual
+	#
+	#     return x
+
+	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, stride=1, r=24, p=0):
+		# MBConv with an expansion factor of N, plus squeeze-and-excitation
+		padding = (kernel_size - 1) // 2
+		expanded = expansion_factor * input_shape
+		skip_connection = (input_shape == filters) and (stride == 1)
+
+		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
+		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size, stride=stride, padding=padding, groups=expanded)
+		se = s_e(depthwise, filters, r=r)
+		reduce_pw = c_bn_a(se, filters, kernel_size=1, act=False)
+		# drop_sample = drop_sample(p)
+
+		return reduce_pw
+
+	# expansion_factor=6
+
+	# Block 1
+	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(s_i)
+
+	# Block 2
+	bl2 = mb_conv_n(bl1, 16)
+
+	# Block 3
+	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
+
+	# Block 4
+	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
+
+	# Block 5
+	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
+
+	# Block 6
+	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
+
+	# Block 7
+	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
+
+	# Block 8
+	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
+
+	# Block 9
+	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
+	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(c9)
+	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
+	bl9 = tf.keras.layers.Dense(units)(p9)
+
+	# def fc(x, num_units_out, name, seed=None):
+			# with tf.variable_scope(name, use_resource=True):
+				# x = tf.keras.layers.Dense(inputs=x, units=num_units_out, kernel_initializer=tf.glorot_uniform_initializer(seed=seed))
+
+	# Unet expanding path
+	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
+	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
+	drop5 = Dropout(0.5)(conv5)
+
+	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop5))
+	merge6 = Concatenate(axis=3) ([drop4, up6])
+	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
 
 	up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
-	# merge7 = Concatenate(axis=3) ([conv3, up7])
-	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(up7)
+	merge7 = Concatenate(axis=3) ([conv3, up7])
+	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
 	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
 
 	up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
-	# merge8 = Concatenate(axis=3) ([conv2, up8])
-	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(up8)
+	merge8 = Concatenate(axis=3) ([conv2, up8])
+	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
 	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
 
 	up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
-	# merge9 = Concatenate(axis=3) ([conv1, up9])
-	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(up9)
+	merge9 = Concatenate(axis=3) ([conv1, up9])
+	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
 	output = Conv2D(1, 1, activation='sigmoid')(conv9)
 
-	return Model(i_s, output)
+	return Model(inputs, output)
 
 
 if __name__ == '__main__':
