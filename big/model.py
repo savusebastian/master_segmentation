@@ -120,9 +120,9 @@ def get_efficientnet_unet(input_shape):
 	#     self.act = nn.SiLU() if act else nn.Identity()
 
 
-	def c_bn_a(input_shape, filters, kernel_size=3, padding=0, groups=1, bias=False, act=True):
+	def c_bn_a(input_shape, filters, kernel_size=3, groups=1, bias=False, act=True):
 		# convolution, batch_normalization, activation
-		c2d = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding=padding)(input_shape)
+		c2d = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding='same')(input_shape)
 		bn = tf.keras.layers.BatchNormalization()(c2d)
 		a = tf.keras.layers.SiLU()(bn) if act else tf.identity()(bn)
 
@@ -211,7 +211,7 @@ def get_efficientnet_unet(input_shape):
 		# skip_connection = (input_shape == filters) and (stride == 1)
 
 		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
-		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size, padding=padding, groups=expanded)
+		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size, groups=expanded)
 		se = s_e(depthwise, filters, r=r)
 		reduce_pw = c_bn_a(se, filters, kernel_size=1, act=False)
 		# drop_sample = drop_sample(p)
