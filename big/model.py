@@ -221,7 +221,7 @@ def get_efficientnet_unet(input_shape):
 	# expansion_factor=6
 
 	# Block 1
-	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(s_i)
+	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(i_s)
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
