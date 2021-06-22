@@ -249,14 +249,14 @@ def get_efficientnet_unet(input_shape):
 	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
 	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(c9)
 	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
-	bl9 = tf.keras.layers.Dense(units)(p9)
+	bl9 = tf.keras.layers.Dense(1280)(p9)
 
 	# def fc(x, num_units_out, name, seed=None):
 			# with tf.variable_scope(name, use_resource=True):
 				# x = tf.keras.layers.Dense(inputs=x, units=num_units_out, kernel_initializer=tf.glorot_uniform_initializer(seed=seed))
 
 	# Unet expanding path
-	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
+	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(bl9)
 	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
 	drop5 = Dropout(0.5)(conv5)
 
