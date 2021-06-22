@@ -107,7 +107,7 @@ def get_unet(input_shape):
 	return Model(inputs, output)
 
 
-def get_efficientnet_keras_unet(input_shape):
+def get_efficientnet_unet(input_shape):
 	# Efficientnet b0 as contracting path for unet
 	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
 	# https://python.plainenglish.io/implementing-efficientnet-in-pytorch-part-3-mbconv-squeeze-and-excitation-and-more-4ca9fd62d302
@@ -253,106 +253,6 @@ def get_efficientnet_keras_unet(input_shape):
 	# def fc(x, num_units_out, name, seed=None):
 			# with tf.variable_scope(name, use_resource=True):
 				# x = tf.keras.layers.Dense(inputs=x, units=num_units_out, kernel_initializer=tf.glorot_uniform_initializer(seed=seed))
-
-	# Unet expanding path
-	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
-	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
-	drop5 = Dropout(0.5)(conv5)
-
-	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop5))
-	merge6 = Concatenate(axis=3) ([drop4, up6])
-	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
-	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
-
-	up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
-	merge7 = Concatenate(axis=3) ([conv3, up7])
-	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
-	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
-
-	up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
-	merge8 = Concatenate(axis=3) ([conv2, up8])
-	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
-	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
-
-	up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
-	merge9 = Concatenate(axis=3) ([conv1, up9])
-	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
-	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
-	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
-
-	output = Conv2D(1, 1, activation='sigmoid')(conv9)
-
-	return Model(inputs, output)
-
-
-def get_efficientnet_nn_unet(input_shape):
-	i_s = Input(input_shape)
-
-	def c_bn_a(input_shape, out_channels, kernel_size=3, act=True):
-		c2d = tf.nn.conv2d(input_shape, [kernel_size, kernel_size, input_shape.shape[3], out_channels], 1, 'SAME')
-
-		w_initial = np.random.normal(size=(256,256)).astype(np.float32)
-		w1_bn = tf.Variable(w1_initial)
-		x = tf.placeholder(tf.float32, shape=[None, 256])
-		z1_bn = tf.matmul(x, w1_bn)
-		mean, variance = tf.nn.moments(z1_bn, [0])
-		bn = tf.nn.batch_normalization(c2d, mean, variance, None, None, 1e-3)
-
-		a = tf.nn.silu(bn) if act else tf.identity()(bn)
-
-		return a
-
-	def s_e_(input_shape, out_channels, r=24):
-		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
-		c2d1 = tf.nn.conv2d(ap2, [1, 1, input_shape.shape[3], out_channels // r], 1, 'SAME')
-		a1 = tf.nn.silu(c2d1)
-		c2d2 = tf.nn.conv2d(a1, [1, 1, input_shape.shape[3], out_channels // r], 1, 'SAME')
-		l = np.random.rand(input_shape.shape[0], input_shape.shape[1], input_shape.shape[2], input_shape.shape[3])
-		a2 = tf.nn.sigmoid_cross_entropy_with_logits(labels=l, logits=c2d2)
-
-		return input_shape * a2
-
-	def mb_conv_n(input_shape, out_channels, expansion_factor=1, kernel_size=3, r=24, p=0):
-		padding = (kernel_size - 1) // 2
-		expanded = expansion_factor * input_shape
-
-		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
-		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size)
-		se = s_e(depthwise, out_channels, r=r)
-		reduce_pw = c_bn_a(se, out_channels, kernel_size=1, act=False)
-
-		return reduce_pw
-
-
-	# Block 1
-	bl1 = tf.nn.conv2d(i_s, [3, 3, i_s.shape[3], 32], 1, 'SAME')
-
-	# Block 2
-	bl2 = mb_conv_n(bl1, 16)
-
-	# Block 3
-	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
-
-	# Block 4
-	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
-
-	# Block 5
-	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
-
-	# Block 6
-	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
-
-	# Block 7
-	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
-
-	# Block 8
-	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
-
-	# Block 9
-	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
-	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(c9)
-	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
-	bl9 = tf.keras.layers.Dense(units)(p9)
 
 	# Unet expanding path
 	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
