@@ -302,7 +302,7 @@ def get_efficientnet_nn_unet(input_shape):
 
 		return a
 
-	def s_e_(input_shape, filters, r=24):
+	def s_e_(input_shape, out_channels, r=24):
 		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
 		c2d1 = tf.nn.conv2d(ap2, [1, 1, input_shape.shape[3], out_channels // r], 1, 'SAME')
 		a1 = tf.nn.silu(c2d1)
@@ -312,14 +312,14 @@ def get_efficientnet_nn_unet(input_shape):
 
 		return input_shape * a2
 
-	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, r=24, p=0):
+	def mb_conv_n(input_shape, out_channels, expansion_factor=1, kernel_size=3, r=24, p=0):
 		padding = (kernel_size - 1) // 2
 		expanded = expansion_factor * input_shape
 
 		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
 		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size)
-		se = s_e(depthwise, filters, r=r)
-		reduce_pw = c_bn_a(se, filters, kernel_size=1, act=False)
+		se = s_e(depthwise, out_channels, r=r)
+		reduce_pw = c_bn_a(se, out_channels, kernel_size=1, act=False)
 
 		return reduce_pw
 
