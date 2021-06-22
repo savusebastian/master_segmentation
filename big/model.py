@@ -325,7 +325,7 @@ def get_efficientnet_nn_unet(input_shape):
 
 
 	# Block 1
-	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(i_s)
+	bl1 = tf.nn.conv2d(i_s, [3, 3, i_s.shape[3], 32], 1, 'SAME')
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
