@@ -1,3 +1,4 @@
+from tensorflow.keras.activations import *
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 import numpy as np
@@ -125,7 +126,7 @@ def get_efficientnet_unet(input_shape):
 		# convolution, batch_normalization, activation
 		c2d = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding='same')(input_shape)
 		bn = tf.keras.layers.BatchNormalization()(c2d)
-		a = tf.keras.layers.SiLU()(bn) if act else tf.identity()(bn)
+		a = tf.nn.silu(bn) if act else tf.identity(bn)
 
 		return a
 
@@ -144,9 +145,9 @@ def get_efficientnet_unet(input_shape):
 		# https://cs231n.github.io/convolutional-networks/#pool
 		ap2d = tf.keras.layers.AverragePooling2D()(input_shape)
 		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
-		silu = tf.keras.layers.SiLU()(c2d1)
+		a1 = tf.nn.silu(c2d1)
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(silu)
-		sig = tf.keras.layers.Sigmoid()(c2d2)
+		a2 = tf.keras.activations.sigmoid(c2d2)
 
 		return input_shape * sig
 
@@ -165,16 +166,16 @@ def get_efficientnet_unet(input_shape):
 	#     x = x * bit_mask
 	#     return x
 
-	def drop_sample(input_shape, p=0):
-		# Drops each sample in x with probability p during training
-		batch_size = input_shape.shape
-		# random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
-		bit_mask = p < random_tensor
-
-		input_shape = input_shape.div(1 - p)
-		input_shape *= bit_mask
-
-		return input_shape
+	# def drop_sample(input_shape, p=0):
+	# 	# Drops each sample in x with probability p during training
+	# 	batch_size = input_shape.shape
+	# 	# random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
+	# 	bit_mask = p < random_tensor
+	#
+	# 	input_shape = input_shape.div(1 - p)
+	# 	input_shape *= bit_mask
+	#
+	# 	return input_shape
 
 	# class MBConvN(nn.Module):
 	#   """MBConv with an expansion factor of N, plus squeeze-and-excitation"""
