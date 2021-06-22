@@ -107,7 +107,7 @@ def get_unet(input_shape):
 	return Model(inputs, output)
 
 
-def get_efficientnet_unet_keras(input_shape):
+def get_efficientnet_keras_unet(input_shape):
 	# Efficientnet b0 as contracting path for unet
 	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
 	# https://python.plainenglish.io/implementing-efficientnet-in-pytorch-part-3-mbconv-squeeze-and-excitation-and-more-4ca9fd62d302
@@ -219,7 +219,6 @@ def get_efficientnet_unet_keras(input_shape):
 
 		return reduce_pw
 
-	# expansion_factor=6
 
 	# Block 1
 	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(i_s)
@@ -286,125 +285,44 @@ def get_efficientnet_unet_keras(input_shape):
 	return Model(inputs, output)
 
 
-def get_efficientnet_unet_nn(input_shape):
-	# Efficientnet b0 as contracting path for unet
-	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
-	# https://python.plainenglish.io/implementing-efficientnet-in-pytorch-part-3-mbconv-squeeze-and-excitation-and-more-4ca9fd62d302
+def get_efficientnet_nn_unet(input_shape):
 	i_s = Input(input_shape)
 
-	# class ConvBnAct(nn.Module):
-	#   """Layer grouping a convolution, batchnorm, and activation function"""
-	#   def __init__(self, n_in, n_out, kernel_size=3, stride=1, padding=0, groups=1, bias=False, bn=True, act=True):
-	#     self.conv = nn.Conv2d(n_in, n_out, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=bias)
-	#     self.bn = nn.BatchNorm2d(n_out) if bn else nn.Identity()
-	#     self.act = nn.SiLU() if act else nn.Identity()
-
-
 	def c_bn_a(input_shape, out_channels, kernel_size=3, act=True):
-		# convolution, batch_normalization, activation
-		# https://r2rt.com/implementing-batch-normalization-in-tensorflow.html
-		# bn = tf.keras.layers.BatchNormalization()(c2d)
-		# a = tf.keras.layers.SiLU()(bn) if act else tf.identity()(bn)
-
-		c2d = tf.nn.conv2d(input_shape, [3, 3, input_shape.shape[3], out_channels])
+		c2d = tf.nn.conv2d(input_shape, [kernel_size, kernel_size, input_shape.shape[3], out_channels], 1, 'SAME')
 
 		w_initial = np.random.normal(size=(256,256)).astype(np.float32)
-		w1_bn =
-		bn = tf.nn.batch_normalization(c2d, , 1e-3)
+		w1_bn = tf.Variable(w1_initial)
+		x = tf.placeholder(tf.float32, shape=[None, 256])
+		z1_bn = tf.matmul(x, w1_bn)
+		mean, variance = tf.nn.moments(z1_bn, [0])
+		bn = tf.nn.batch_normalization(c2d, mean, variance, None, None, 1e-3)
+
+		a = tf.nn.silu(bn) if act else tf.identity()(bn)
 
 		return a
 
-	# class SEBlock(nn.Module):
-	#   """Squeeze-and-excitation block"""
-	#   def __init__(self, n_in, r=24):
-	#     self.squeeze = nn.AdaptiveAvgPool2d(1)
-	#     self.excitation = nn.Sequential(nn.Conv2d(n_in, n_in//r, kernel_size=1),
-	#                                     nn.SiLU(),
-	#                                     nn.Conv2d(n_in//r, n_in, kernel_size=1),
-	#                                     nn.Sigmoid())
-
-
 	def s_e_(input_shape, filters, r=24):
-		# For other output sizes in Keras, you need to use AveragePooling2D, but you can't specify the output shape directly. You need to calculate/define the pool_size, stride, and padding parameters depending on how you want the output shape. If you need help with the calculations, check this page of CS231n course.
-		# https://cs231n.github.io/convolutional-networks/#pool
-		ap2d = tf.keras.layers.AverragePooling2D()(input_shape)
-		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
-		silu = tf.keras.layers.SiLU()(c2d1)
-		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(silu)
-		sig = tf.keras.layers.Sigmoid()(c2d2)
+		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
+		c2d1 = tf.nn.conv2d(ap2, [1, 1, input_shape.shape[3], out_channels // r], 1, 'SAME')
+		a1 = tf.nn.silu(c2d1)
+		c2d2 = tf.nn.conv2d(a1, [1, 1, input_shape.shape[3], out_channels // r], 1, 'SAME')
+		l = np.random.rand(input_shape.shape[0], input_shape.shape[1], input_shape.shape[2], input_shape.shape[3])
+		a2 = tf.nn.sigmoid_cross_entropy_with_logits(labels=l, logits=c2d2)
 
-		return input_shape * sig
-
-	# class DropSample(nn.Module):
-	#   """Drops each sample in x with probability p during training"""
-	#   def __init__(self, p=0):
-	#   def forward(self, x):
-	#     if (not self.p) or (not self.training):
-	#       return x
-	#
-	#     batch_size = len(x)
-	#     random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
-	#     bit_mask = self.p<random_tensor
-	#
-	#     x = x.div(1-self.p)
-	#     x = x * bit_mask
-	#     return x
-
-	def drop_sample(input_shape, p=0):
-		# Drops each sample in x with probability p during training
-		batch_size = input_shape.shape
-		# random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
-		bit_mask = p < random_tensor
-
-		input_shape = input_shape.div(1 - p)
-		input_shape *= bit_mask
-
-		return input_shape
-
-	# class MBConvN(nn.Module):
-	#   """MBConv with an expansion factor of N, plus squeeze-and-excitation"""
-	#   def __init__(self, n_in, n_out, expansion_factor, kernel_size=3, stride=1, r=24, p=0):
-	#     super().__init__()
-	#
-	#     padding = (kernel_size-1)//2
-	#     expanded = expansion_factor*n_in
-	#     self.skip_connection = (n_in == n_out) and (stride == 1)
-	#
-	#     self.expand_pw = nn.Identity() if (expansion_factor == 1) else ConvBnAct(n_in, expanded, kernel_size=1)
-	#     self.depthwise = ConvBnAct(expanded, expanded, kernel_size=kernel_size, stride=stride, padding=padding, groups=expanded)
-	#     self.se = SEBlock(expanded, r=r)
-	#     self.reduce_pw = ConvBnAct(expanded, n_out, kernel_size=1, act=False)
-	#     self.dropsample = DropSample(p)
-	#
-	#   def forward(self, x):
-	#     residual = x
-	#
-	#     x = self.expand_pw(x)
-	#     x = self.depthwise(x)
-	#     x = self.se(x)
-	#     x = self.reduce_pw(x)
-	#
-	#     if self.skip_connection:
-	#       x = self.dropsample(x)
-	#       x = x + residual
-	#
-	#     return x
+		return input_shape * a2
 
 	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, r=24, p=0):
-		# MBConv with an expansion factor of N, plus squeeze-and-excitation
 		padding = (kernel_size - 1) // 2
 		expanded = expansion_factor * input_shape
-		# skip_connection = (input_shape == filters) and (stride == 1)
 
 		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
 		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size)
 		se = s_e(depthwise, filters, r=r)
 		reduce_pw = c_bn_a(se, filters, kernel_size=1, act=False)
-		# drop_sample = drop_sample(p)
 
 		return reduce_pw
 
-	# expansion_factor=6
 
 	# Block 1
 	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(i_s)
@@ -435,10 +353,6 @@ def get_efficientnet_unet_nn(input_shape):
 	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(c9)
 	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
 	bl9 = tf.keras.layers.Dense(units)(p9)
-
-	# def fc(x, num_units_out, name, seed=None):
-			# with tf.variable_scope(name, use_resource=True):
-				# x = tf.keras.layers.Dense(inputs=x, units=num_units_out, kernel_initializer=tf.glorot_uniform_initializer(seed=seed))
 
 	# Unet expanding path
 	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
