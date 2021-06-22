@@ -166,7 +166,7 @@ def get_efficientnet_unet(input_shape):
 
 	def drop_sample(input_shape, p=0):
 		# Drops each sample in x with probability p during training
-		batch_size = len(input_shape)
+		batch_size = input_shape.shape
 		# random_tensor = torch.cuda.FloatTensor(batch_size, 1, 1, 1).uniform_()
 		bit_mask = p < random_tensor
 
