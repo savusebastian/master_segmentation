@@ -208,7 +208,7 @@ def get_efficientnet_unet(input_shape):
 	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, r=24, p=0):
 		# MBConv with an expansion factor of N, plus squeeze-and-excitation
 		padding = (kernel_size - 1) // 2
-		expanded = expansion_factor * input_shape
+		expanded = expansion_factor * input_shape.shape[3]
 		# skip_connection = (input_shape == filters) and (stride == 1)
 
 		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
