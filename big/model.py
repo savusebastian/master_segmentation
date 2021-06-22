@@ -146,10 +146,10 @@ def get_efficientnet_unet(input_shape):
 		ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
 		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
 		a1 = tf.nn.silu(c2d1)
-		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(silu)
+		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
 
-		return input_shape * sig
+		return input_shape * a2
 
 	# class DropSample(nn.Module):
 	#   """Drops each sample in x with probability p during training"""
