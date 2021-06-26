@@ -216,7 +216,7 @@ def get_efficientnet_unet(input_shape):
 		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size)
 		se = s_e(depthwise, filters, r=r)
 		reduce_pw = c_bn_a(se, filters, kernel_size=1, act=False)
-		# drop_sample = drop_sample(p)
+		# d_s = drop_sample(p)
 
 		return reduce_pw
 
@@ -256,55 +256,39 @@ def get_efficientnet_unet(input_shape):
 				# x = tf.keras.layers.Dense(inputs=x, units=num_units_out, kernel_initializer=tf.glorot_uniform_initializer(seed=seed))
 
 	# Unet expanding path
-	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(bl9)
-	conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
-	drop5 = Dropout(0.5)(conv5)
+	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(bl9)
+	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
+	# drop5 = Dropout(0.5)(conv5)
 
-	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop5))
-	merge6 = Concatenate(axis=3) ([drop4, up6])
+	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(bl9))
+	merge6 = Concatenate(axis=3) ([bl4, up6])
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
 	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
 
 	up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
-	merge7 = Concatenate(axis=3) ([conv3, up7])
+	merge7 = Concatenate(axis=3) ([bl3, up7])
 	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
 	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
 
 	up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
-	merge8 = Concatenate(axis=3) ([conv2, up8])
+	merge8 = Concatenate(axis=3) ([bl2, up8])
 	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
 	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
 
 	up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
-	merge9 = Concatenate(axis=3) ([conv1, up9])
+	merge9 = Concatenate(axis=3) ([bl1, up9])
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
 	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
 	output = Conv2D(1, 1, activation='sigmoid')(conv9)
 
-	return Model(inputs, output)
+	return Model(i_s, output)
 
 
 # def get_efficientnet_as_unet(input_shape):
 def EfficientNet(width_coefficient, depth_coefficient, default_size, dropout_rate=0.2, drop_connect_rate=0.2, depth_divisor=8, activation='swish', blocks_args='default', model_name='efficientnet', include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=2, classifier_activation='softmax'):
 	def block(inputs, activation='swish', drop_rate=0., name='', filters_in=32, filters_out=16, kernel_size=3, strides=1, expand_ratio=1, se_ratio=0., id_skip=True):
-		# An inverted residual block.
-		# Args:
-		# 	inputs: input tensor.
-		# 	activation: activation function.
-		# 	drop_rate: float between 0 and 1, fraction of the input units to drop.
-		# 	name: string, block label.
-		# 	filters_in: integer, the number of input filters.
-		# 	filters_out: integer, the number of output filters.
-		# 	kernel_size: integer, the dimension of the convolution window.
-		# 	strides: integer, the stride of the convolution.
-		# 	expand_ratio: integer, scaling coefficient for the input filters.
-		# 	se_ratio: float between 0 and 1, fraction to squeeze the input filters.
-		# 	id_skip: boolean.
-		# Returns:
-		# 	output tensor for the block.
-
 		bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
 
 		# Expansion phase
