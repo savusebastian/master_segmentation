@@ -124,14 +124,14 @@ def get_efficientnet_unet(input_shape):
 		# For other output sizes in Keras, you need to use AveragePooling2D, but you can't specify the output shape directly. You need to calculate/define the pool_size, stride, and padding parameters depending on how you want the output shape. If you need help with the calculations, check this page of CS231n course.
 		# https://cs231n.github.io/convolutional-networks/#pool
 		r = filters if filters < r * 2 else 24
-		
+
 		ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
 		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
 		a1 = tf.nn.silu(c2d1)
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
 
-		return input_shape * a2
+		return ap2d * a2
 
 	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0):
 		# MBConv with an expansion factor of N, plus squeeze-and-excitation
