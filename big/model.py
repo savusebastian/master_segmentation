@@ -196,7 +196,7 @@ def get_efficientnet_unet(input_shape):
 	ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
 
 	ebl7 = Conv2D(192, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl8))
-	ebl7 = Concatenate(axis=3) ([bl7, ebl7])
+	ebl7 = Concatenate(axis=3) ([bl7, ebl8])
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 
