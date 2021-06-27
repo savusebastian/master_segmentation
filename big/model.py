@@ -205,26 +205,27 @@ def get_efficientnet_unet(input_shape):
 	# conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
 	# Block 8
-	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
+	ebl8 = mb_conv_n(bl9, 320, expansion_factor=6)
 
 	# Block 7
-	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
+	ebl7 = mb_conv_n(ebl8, 192, expansion_factor=6, kernel_size=5)
 
 	# Block 6
-	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
+	ebl6 = mb_conv_n(ebl7, 112, expansion_factor=6, kernel_size=5)
 
 	# Block 5
-	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
+	ebl5 = mb_conv_n(ebl6, 80, expansion_factor=6)
 
 	# Block 4
-	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
+	ebl4 = mb_conv_n(ebl5, 40, expansion_factor=6, kernel_size=5)
 
 	# Block 3
-	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
+	ebl3 = mb_conv_n(ebl4, 24, expansion_factor=6)
 
-	bl2 = mb_conv_n(bl1, 16)
+	# Block 2
+	ebl2 = mb_conv_n(ebl3, 16)
 
-	output = Conv2D(1, 1, activation='sigmoid')(conv9)
+	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
 
 	return Model(i_s, output)
 
