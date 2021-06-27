@@ -152,31 +152,31 @@ def get_efficientnet_unet(input_shape):
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
-	pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl2)
+	# pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl2)
 
 	# Block 3
 	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
-	pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl3)
+	# pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl3)
 
 	# Block 4
 	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
-	pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl4)
+	# pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl4)
 
 	# Block 5
 	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
-	pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl5)
+	# pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl5)
 
 	# Block 6
 	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
-	pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl6)
+	# pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl6)
 
 	# Block 7
 	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
-	pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl7)
+	# pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl7)
 
 	# Block 8
 	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
-	pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl8)
+	# pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl8)
 
 	# Block 9
 	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
@@ -191,38 +191,38 @@ def get_efficientnet_unet(input_shape):
 	# drop5 = Dropout(0.5)(conv5)
 
 	ebl8 = Conv2D(320, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(bl9))
-	ebl8 = Concatenate(axis=3) ([pool8, ebl8])
+	ebl8 = Concatenate(axis=3) ([bl8, ebl8])
 	ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
 	ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
 
 	ebl7 = Conv2D(192, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl8))
-	ebl7 = Concatenate(axis=3) ([pool7, up7])
+	ebl7 = Concatenate(axis=3) ([bl7, up7])
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 
 	ebl6 = Conv2D(112, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl7))
-	ebl6 = Concatenate(axis=3) ([pool6, ebl6])
+	ebl6 = Concatenate(axis=3) ([bl6, ebl6])
 	ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 	ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 
 	ebl5 = Conv2D(80, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl6))
-	ebl5 = Concatenate(axis=3) ([pool5, ebl5])
+	ebl5 = Concatenate(axis=3) ([bl5, ebl5])
 	ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 	ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 	# ebl5 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 
 	ebl4 = Conv2D(40, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl5))
-	ebl4 = Concatenate(axis=3) ([pool4, ebl4])
+	ebl4 = Concatenate(axis=3) ([bl4, ebl4])
 	ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 	ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 
 	ebl3 = Conv2D(24, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl4))
-	ebl3 = Concatenate(axis=3) ([pool3, ebl3])
+	ebl3 = Concatenate(axis=3) ([bl3, ebl3])
 	ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 	ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 
 	ebl2 = Conv2D(16, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl3))
-	ebl2 = Concatenate(axis=3) ([pool2, ebl2])
+	ebl2 = Concatenate(axis=3) ([bl2, ebl2])
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 
