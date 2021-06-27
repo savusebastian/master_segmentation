@@ -247,7 +247,8 @@ def get_efficientnet_unet(input_shape):
 	# # Block 2
 	# ebl2 = mb_conv_n(ebl3, 16)
 
-	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
+	zp = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(ebl2)
+	output = Conv2D(1, 1, activation='sigmoid')(zp)
 
 	return Model(i_s, output)
 
