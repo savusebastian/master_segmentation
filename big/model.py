@@ -201,28 +201,28 @@ def get_efficientnet_unet(input_shape):
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 
 	ebl6 = Conv2D(112, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl7))
-	ebl6 = Concatenate(axis=3) ([bl6, ebl6])
+	ebl6 = Concatenate(axis=3) ([bl6, ebl8])
 	ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 	ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 
 	ebl5 = Conv2D(80, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl6))
-	ebl5 = Concatenate(axis=3) ([bl5, ebl5])
+	ebl5 = Concatenate(axis=3) ([bl5, ebl8])
 	ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 	ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 	# ebl5 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 
 	ebl4 = Conv2D(40, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl5))
-	ebl4 = Concatenate(axis=3) ([bl4, ebl4])
+	ebl4 = Concatenate(axis=3) ([bl4, ebl8])
 	ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 	ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 
 	ebl3 = Conv2D(24, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl4))
-	ebl3 = Concatenate(axis=3) ([bl3, ebl3])
+	ebl3 = Concatenate(axis=3) ([bl3, ebl8])
 	ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 	ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 
 	ebl2 = Conv2D(16, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl3))
-	ebl2 = Concatenate(axis=3) ([bl2, ebl2])
+	ebl2 = Concatenate(axis=3) ([bl2, ebl8])
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 
