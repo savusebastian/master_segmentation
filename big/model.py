@@ -125,14 +125,16 @@ def get_efficientnet_unet(input_shape):
 		# https://cs231n.github.io/convolutional-networks/#pool
 		r = filters if filters < r * 2 else 24
 
-		ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
-		# ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
+		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
+
+		# ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
+		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
 		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(ap2d)
 		a1 = tf.nn.silu(c2d1)
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
 
-		return input_shape * a2
+		return 0 * a2
 
 	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0):
 		# MBConv with an expansion factor of N, plus squeeze-and-excitation
