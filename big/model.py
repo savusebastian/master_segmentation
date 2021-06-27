@@ -152,24 +152,31 @@ def get_efficientnet_unet(input_shape):
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
+	pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl2)
 
 	# Block 3
 	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
+	pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl3)
 
 	# Block 4
 	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
+	pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl4)
 
 	# Block 5
 	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
+	pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl5)
 
 	# Block 6
 	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
+	pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl6)
 
 	# Block 7
 	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
+	pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl7)
 
 	# Block 8
 	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
+	pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(bl8)
 
 	# Block 9
 	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
@@ -183,47 +190,47 @@ def get_efficientnet_unet(input_shape):
 	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
 	# drop5 = Dropout(0.5)(conv5)
 
-	# up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(bl9))
-	# merge6 = Concatenate(axis=3) ([bl4, up6])
-	# conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
-	# conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
+	up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(bl9))
+	merge6 = Concatenate(axis=3) ([pool5, up6])
+	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
+	conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
+
+	up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
+	merge7 = Concatenate(axis=3) ([pool4, up7])
+	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
+	conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
+
+	up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
+	merge8 = Concatenate(axis=3) ([pool3, up8])
+	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
+	conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
+
+	up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
+	merge9 = Concatenate(axis=3) ([pool2, up9])
+	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
+	conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
+	conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
+
+	# # Block 8
+	# ebl8 = mb_conv_n(bl9, 320, expansion_factor=6)
 	#
-	# up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv6))
-	# merge7 = Concatenate(axis=3) ([bl3, up7])
-	# conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
-	# conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
+	# # Block 7
+	# ebl7 = mb_conv_n(ebl8, 192, expansion_factor=6, kernel_size=5)
 	#
-	# up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv7))
-	# merge8 = Concatenate(axis=3) ([bl2, up8])
-	# conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
-	# conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
+	# # Block 6
+	# ebl6 = mb_conv_n(ebl7, 112, expansion_factor=6, kernel_size=5)
 	#
-	# up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(conv8))
-	# merge9 = Concatenate(axis=3) ([bl1, up9])
-	# conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
-	# conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
-	# conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
-
-	# Block 8
-	ebl8 = mb_conv_n(bl9, 320, expansion_factor=6)
-
-	# Block 7
-	ebl7 = mb_conv_n(ebl8, 192, expansion_factor=6, kernel_size=5)
-
-	# Block 6
-	ebl6 = mb_conv_n(ebl7, 112, expansion_factor=6, kernel_size=5)
-
-	# Block 5
-	ebl5 = mb_conv_n(ebl6, 80, expansion_factor=6)
-
-	# Block 4
-	ebl4 = mb_conv_n(ebl5, 40, expansion_factor=6, kernel_size=5)
-
-	# Block 3
-	ebl3 = mb_conv_n(ebl4, 24, expansion_factor=6)
-
-	# Block 2
-	ebl2 = mb_conv_n(ebl3, 16)
+	# # Block 5
+	# ebl5 = mb_conv_n(ebl6, 80, expansion_factor=6)
+	#
+	# # Block 4
+	# ebl4 = mb_conv_n(ebl5, 40, expansion_factor=6, kernel_size=5)
+	#
+	# # Block 3
+	# ebl3 = mb_conv_n(ebl4, 24, expansion_factor=6)
+	#
+	# # Block 2
+	# ebl2 = mb_conv_n(ebl3, 16)
 
 	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
 
