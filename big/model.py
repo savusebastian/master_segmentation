@@ -148,7 +148,7 @@ def get_efficientnet_unet(input_shape):
 		return reduce_pw
 
 	# Block 1
-	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3)(i_s)
+	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3, padding='same')(i_s)
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
