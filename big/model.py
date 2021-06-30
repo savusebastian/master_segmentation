@@ -236,7 +236,7 @@ def get_efficientnet_unet(input_shape):
 
 	# Expanding Block 2
 	ebl2 = Conv2D(16, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl3))
-	ebl2 = Concatenate(axis=3)([bl2, ebl3])
+	ebl2 = Concatenate(axis=3)([bl2, ebl2])
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 
