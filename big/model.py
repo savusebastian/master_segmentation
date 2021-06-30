@@ -277,7 +277,11 @@ def get_efficientnet_as_unet(input_shape):
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
 
-		return mp2d * a2
+		# Equalize the channels to match shape of the pooling element
+		eq_c1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(mp2d)
+		eq_c2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(eq_c1)
+
+		return eq_c2 * a2
 
 	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0, up=False):
 		if up:
