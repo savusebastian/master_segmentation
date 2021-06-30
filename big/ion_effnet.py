@@ -26,6 +26,7 @@ img_width = 256
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	data_train,
+	labels=os.walk(data_train)
 	seed=42,
 	image_size=(img_height, img_width),
 	batch_size=batch_size
@@ -33,6 +34,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	data_test,
+	labels=os.walk(data_test)
 	seed=42,
 	image_size=(img_height, img_width),
 	batch_size=batch_size
