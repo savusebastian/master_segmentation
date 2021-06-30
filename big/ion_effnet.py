@@ -13,15 +13,15 @@ from tensorflow.keras.layers.experimental import preprocessing
 
 
 # http://download.tensorflow.org/example_images/flower_photos.tgz
-data_train = './flowers/train'
-data_test = './flowers/test'
+data_train = './aerial_image_dataset/training/images'
+data_test = './aerial_image_dataset/validation/images'
 
 data_train = pathlib.Path(data_train)
 data_test = pathlib.Path(data_test)
 
 batch_size = 32
-img_height = 180
-img_width = 180
+img_height = 256
+img_width = 256
 
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
@@ -48,7 +48,7 @@ img_augmentation = Sequential(
 	name='img_augmentation',
 )
 
-num_classes = 5
+num_classes = 2
 inputs = layers.Input(shape=(img_height, img_width, 3))
 #inputs = img_augmentation(inputs)
 outputs = EfficientNetB0(include_top=False, weights=None, classes=num_classes)(inputs)
