@@ -201,7 +201,7 @@ def get_efficientnet_unet(input_shape):
 	# Block 9
 	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
 	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))(c9)
-	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
+	p9 = tf.keras.layers.GlobalAveragePooling2D()(p9)
 	bl9 = tf.keras.layers.Dense(1280)(p9)
 
 	# Expanding path
