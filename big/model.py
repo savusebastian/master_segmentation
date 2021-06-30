@@ -129,8 +129,8 @@ def get_efficientnet_unet(input_shape):
 		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
 
 		# ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
-		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
-		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(ap2d)
+		# ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
+		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
 		a1 = tf.nn.silu(c2d1)
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
@@ -165,7 +165,6 @@ def get_efficientnet_unet(input_shape):
 	#
 	# 	return ad
 
-	# Use pool operations if you are using concatenate (as unet)
 	# Contracting Path
 	# Block 1
 	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3, padding='same')(i_s)
@@ -207,53 +206,24 @@ def get_efficientnet_unet(input_shape):
 	# Expanding path
 	# Expanding Block 8
 	ebl8 = up_block(bl9, bl8, 320)
-	# ebl8 = Conv2D(320, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(bl9))
-	# ebl8 = Concatenate(axis=3)([bl8, ebl8])
-	# ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
-	# ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
 
 	# Expanding Block 7
 	ebl7 = up_block(ebl8, bl7, 192)
-	# ebl7 = Conv2D(192, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl8))
-	# ebl7 = Concatenate(axis=3)([bl7, ebl7])
-	# ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
-	# ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 
 	# Expanding Block 6
 	ebl6 = up_block(ebl7, bl6, 112)
-	# ebl6 = Conv2D(112, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl7))
-	# ebl6 = Concatenate(axis=3)([bl6, ebl6])
-	# ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
-	# ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 
 	# Expanding Block 5
 	ebl5 = up_block(ebl6, bl5, 80)
-	# ebl5 = Conv2D(80, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl6))
-	# ebl5 = Concatenate(axis=3)([bl5, ebl5])
-	# ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
-	# ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
-	# ebl5 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 
 	# Expanding Block 4
 	ebl4 = up_block(ebl5, bl4, 40)
-	# ebl4 = Conv2D(40, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl5))
-	# ebl4 = Concatenate(axis=3)([bl4, ebl4])
-	# ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
-	# ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 
 	# Expanding Block 3
 	ebl3 = up_block(ebl4, bl3, 24)
-	# ebl3 = Conv2D(24, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl4))
-	# ebl3 = Concatenate(axis=3)([bl3, ebl3])
-	# ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
-	# ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 
 	# Expanding Block 2
 	ebl2 = up_block(ebl3, bl2, 16)
-	# ebl2 = Conv2D(16, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl3))
-	# ebl2 = Concatenate(axis=3)([bl2, ebl2])
-	# ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
-	# ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 
 	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
 
