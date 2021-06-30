@@ -164,34 +164,34 @@ def get_efficientnet_unet(input_shape):
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
-	# pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl2)
+	pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl2)
 
 	# Block 3
-	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
-	# pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl3)
+	bl3 = mb_conv_n(pool2, 24, expansion_factor=6)
+	pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl3)
 
 	# Block 4
-	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
-	# pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl4)
+	bl4 = mb_conv_n(pool3, 40, expansion_factor=6, kernel_size=5)
+	pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl4)
 
 	# Block 5
-	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
-	# pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl5)
+	bl5 = mb_conv_n(pool4, 80, expansion_factor=6)
+	pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl5)
 
 	# Block 6
-	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
-	# pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl6)
+	bl6 = mb_conv_n(pool5, 112, expansion_factor=6, kernel_size=5)
+	pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl6)
 
 	# Block 7
-	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
-	# pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl7)
+	bl7 = mb_conv_n(pool6, 192, expansion_factor=6, kernel_size=5)
+	pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl7)
 
 	# Block 8
-	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
-	# pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl8)
+	bl8 = mb_conv_n(pool7, 320, expansion_factor=6)
+	pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl8)
 
 	# Block 9
-	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
+	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(pool8)
 	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))(c9)
 	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
 	bl9 = tf.keras.layers.Dense(1280)(p9)
