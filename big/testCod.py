@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 	model = get_efficientnet_unet((256, 256, 3))
 	model.load_weights('efficientnet.hdf5')
-
+	model.summary()
 	# model = get_efficientnet_as_unet((256, 256, 3))
 	# model.load_weights('efficientnet_as_unet.hdf5')
 
