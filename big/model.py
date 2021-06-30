@@ -123,10 +123,10 @@ def get_efficientnet_unet(input_shape):
 	def s_e(input_shape, filters, r=24):
 		# For other output sizes in Keras, you need to use AveragePooling2D, but you can't specify the output shape directly. You need to calculate/define the pool_size, stride, and padding parameters depending on how you want the output shape. If you need help with the calculations, check this page of CS231n course.
 		# https://cs231n.github.io/convolutional-networks/#pool
+		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
+
 		if filters < r * 2:
 			r = filters
-
-		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
 
 		# ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
 		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
@@ -250,7 +250,15 @@ def get_efficientnet_as_unet(input_shape):
 	# https://python.plainenglish.io/implementing-efficientnet-in-pytorch-part-3-mbconv-squeeze-and-excitation-and-more-4ca9fd62d302
 	i_s = Input(input_shape)
 
-	def c_bn_a(input_shape, filters, kernel_size=3, act=True):
+	def c_bn_a(input_shape, filters, kernel_size=3, act=True, up=False):
+		if up:
+			ebl = Conv2D(filters, kernel_size=kernel_size - 1, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(input_shape))
+			# ebl = Concatenate(axis=3)([bl, ebl])
+			ebl = Conv2D(filters, kernel_size=kernel_size, activation='relu', padding='same', kernel_initializer='he_normal')(ebl)
+			ebl = Conv2D(filters, kernel_size=kernel_size, activation='relu', padding='same', kernel_initializer='he_normal')(ebl)
+
+			return ebl
+
 		c2d = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding='same')(input_shape)
 		bn = tf.keras.layers.BatchNormalization()(c2d)
 		a = tf.nn.silu(bn) if act else tf.identity(bn)
@@ -260,21 +268,23 @@ def get_efficientnet_as_unet(input_shape):
 	def s_e(input_shape, filters, r=24):
 		# For other output sizes in Keras, you need to use AveragePooling2D, but you can't specify the output shape directly. You need to calculate/define the pool_size, stride, and padding parameters depending on how you want the output shape. If you need help with the calculations, check this page of CS231n course.
 		# https://cs231n.github.io/convolutional-networks/#pool
+		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
+
 		if filters < r * 2:
 			r = filters
 
-		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
-
-		# ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
-		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
-		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(ap2d)
+		mp2d = tf.keras.layers.MaxPooling2D()(input_shape)
+		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(mp2d)
 		a1 = tf.nn.silu(c2d1)
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
 
 		return o * a2
 
-	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0):
+	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0, up=False):
+		if up:
+			return c_bn_a(input_shape, filters, kernel_size=kernel_size, up=True)
+
 		# MBConv with an expansion factor of N, plus squeeze-and-excitation
 		expanded = expansion_factor * input_shape.shape[3]
 
@@ -301,59 +311,52 @@ def get_efficientnet_as_unet(input_shape):
 
 	# Block 2
 	bl2 = mb_conv_n(bl1, 16)
-	pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl2)
 
 	# Block 3
-	bl3 = mb_conv_n(pool2, 24, expansion_factor=6)
-	pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl3)
+	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
 
 	# Block 4
-	bl4 = mb_conv_n(pool3, 40, expansion_factor=6, kernel_size=5)
-	pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl4)
+	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
 
 	# Block 5
-	bl5 = mb_conv_n(pool4, 80, expansion_factor=6)
-	pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl5)
+	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
 
 	# Block 6
-	bl6 = mb_conv_n(pool5, 112, expansion_factor=6, kernel_size=5)
-	pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl6)
+	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
 
 	# Block 7
-	bl7 = mb_conv_n(pool6, 192, expansion_factor=6, kernel_size=5)
-	pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl7)
+	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
 
 	# Block 8
-	bl8 = mb_conv_n(pool7, 320, expansion_factor=6)
-	pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl8)
+	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
 
 	# Block 9
-	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(pool8)
+	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
 	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))(c9)
 	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
 	bl9 = tf.keras.layers.Dense(1280)(p9)
 
 	# Expanding path
 	# Expanding Block 8
-	ebl8 = up_mb_conv_n(bl9, 320, expansion_factor=6)
+	ebl8 = mb_conv_n(bl9, 320, up=True)
 
 	# Expanding Block 7
-	ebl7 = up_mb_conv_n(ebl8, 192, expansion_factor=6, kernel_size=5)
+	ebl7 = mb_conv_n(ebl8, 192, up=True)
 
 	# Expanding Block 6
-	ebl6 = up_mb_conv_n(ebl7, 112, expansion_factor=6, kernel_size=5)
+	ebl6 = mb_conv_n(ebl7, 112, up=True)
 
 	# Expanding Block 5
-	ebl5 = up_mb_conv_n(ebl6, 80, expansion_factor=6)
+	ebl5 = mb_conv_n(ebl6, 80, up=True)
 
 	# Expanding Block 4
-	ebl4 = up_mb_conv_n(ebl5, 40, expansion_factor=6, kernel_size=5)
+	ebl4 = mb_conv_n(ebl5, 40, up=True)
 
 	# Expanding Block 3
-	ebl3 = up_mb_conv_n(ebl4, 24, expansion_factor=6)
+	ebl3 = mb_conv_n(ebl4, 24, up=True)
 
 	# Expanding Block 2
-	ebl2 = up_mb_conv_n(ebl3, 16)
+	ebl2 = mb_conv_n(ebl3, 16, up=True)
 
 	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
 

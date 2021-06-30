@@ -96,14 +96,14 @@ if __name__ == '__main__':
 
 	dataset = {'train': train_dataset, 'val': val_dataset}
 
-	# -- Train Dataset --#
+	# -- Train Dataset -- #
 	dataset['train'] = dataset['train'].map(load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 	dataset['train'] = dataset['train'].shuffle(buffer_size=BUFFER_SIZE, seed=SEED)
 	dataset['train'] = dataset['train'].repeat()
 	dataset['train'] = dataset['train'].batch(BATCH_SIZE)
 	dataset['train'] = dataset['train'].prefetch(buffer_size=AUTOTUNE)
 
-	# -- Validation Dataset --#
+	# -- Validation Dataset -- #
 	dataset['val'] = dataset['val'].map(load_image_test)
 	dataset['val'] = dataset['val'].repeat()
 	dataset['val'] = dataset['val'].batch(BATCH_SIZE)
@@ -121,9 +121,11 @@ if __name__ == '__main__':
 	# model = build_unet((256, 256, 3), 1)
 	# model = get_unet(input_size)
 	model = get_efficientnet_unet(input_size)
+	# model = get_efficientnet_as_unet(input_size)
 
 	model.compile(optimizer=Adam(learning_rate=0.001), loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
 	model.summary()
 	# model_checkpoint = ModelCheckpoint('unet-{epoch:02d}.hdf5', monitor='loss', verbose=1)
 	model_checkpoint = ModelCheckpoint('efficientnet.hdf5', monitor='loss', verbose=1)
+	# model_checkpoint = ModelCheckpoint('efficientnet_as_unet.hdf5', monitor='loss', verbose=1)
 	results = model.fit(dataset['train'], epochs=EPOCHS, steps_per_epoch=STEPS_PER_EPOCH, validation_steps=VALIDATION_STEPS, validation_data=dataset['val'], callbacks=[model_checkpoint])
