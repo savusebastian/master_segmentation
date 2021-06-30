@@ -154,7 +154,7 @@ def get_efficientnet_unet(input_shape):
 		ub3 = Conv2D(filters, kernel_size=kernel_size, activation='relu', padding='same', kernel_initializer='he_normal')(ub2)
 		ub4 = Conv2D(filters, kernel_size=kernel_size, activation='relu', padding='same', kernel_initializer='he_normal')(ub3)
 
-		return u4
+		return ub4
 
 	# def inverted_residual_block(input_shape, expand=64, squeeze=16):
 	# 	# https://towardsdatascience.com/efficientnet-scaling-of-convolutional-neural-networks-done-right-3fde32aef8ff
