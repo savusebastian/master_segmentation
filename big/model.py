@@ -125,7 +125,7 @@ def get_efficientnet_unet(input_shape):
 		# https://cs231n.github.io/convolutional-networks/#pool
 		r = filters if filters < r * 2 else 24
 
-		o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
+		# o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
 
 		# ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
 		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
@@ -134,7 +134,8 @@ def get_efficientnet_unet(input_shape):
 		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
 		a2 = tf.keras.activations.sigmoid(c2d2)
 
-		return o * a2
+		return input_shape * a2
+		# return o * a2
 
 	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0):
 		# MBConv with an expansion factor of N, plus squeeze-and-excitation
@@ -147,6 +148,17 @@ def get_efficientnet_unet(input_shape):
 
 		return reduce_pw
 
+	# def inverted_residual_block(input_shape, expand=64, squeeze=16):
+	# 	# https://towardsdatascience.com/efficientnet-scaling-of-convolutional-neural-networks-done-right-3fde32aef8ff
+	# 	c2d1 = tf.keras.layers.Conv2D(expand, kernel_size=1, activation='relu')(input_shape)
+	# 	dc2d = tf.keras.layers.DepthwiseConv2D(kernel_size=3, activation='relu')(c2d1)
+	# 	c2d2 = tf.keras.layers.Conv2D(squeeze, kernel_size=1, activation='relu')(dc2d)
+	# 	ad = tf.keras.layers.Add()([c2d2, input_shape])
+	#
+	# 	return ad
+
+	# Use pool operations if you are using concatenate (as unet)
+	# Contracting Path
 	# Block 1
 	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3, padding='same')(i_s)
 
@@ -184,68 +196,187 @@ def get_efficientnet_unet(input_shape):
 	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
 	bl9 = tf.keras.layers.Dense(1280)(p9)
 
-
 	# Expanding path
-	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(bl9)
-	# conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
-	# drop5 = Dropout(0.5)(conv5)
-
+	# Expanding Block 8
 	ebl8 = Conv2D(320, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(bl9))
-	ebl8 = Concatenate(axis=3) ([bl8, ebl8])
+	ebl8 = Concatenate(axis=3)([bl8, ebl8])
 	ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
 	ebl8 = Conv2D(320, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl8)
 
+	# Expanding Block 7
 	ebl7 = Conv2D(192, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl8))
-	ebl7 = Concatenate(axis=3) ([bl7, ebl8])
+	ebl7 = Concatenate(axis=3)([bl7, ebl8])
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 	ebl7 = Conv2D(192, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl7)
 
+	# Expanding Block 6
 	ebl6 = Conv2D(112, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl7))
-	ebl6 = Concatenate(axis=3) ([bl6, ebl8])
+	ebl6 = Concatenate(axis=3)([bl6, ebl8])
 	ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 	ebl6 = Conv2D(112, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl6)
 
+	# Expanding Block 5
 	ebl5 = Conv2D(80, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl6))
-	ebl5 = Concatenate(axis=3) ([bl5, ebl8])
+	ebl5 = Concatenate(axis=3)([bl5, ebl8])
 	ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 	ebl5 = Conv2D(80, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 	# ebl5 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl5)
 
+	# Expanding Block 4
 	ebl4 = Conv2D(40, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl5))
-	ebl4 = Concatenate(axis=3) ([bl4, ebl8])
+	ebl4 = Concatenate(axis=3)([bl4, ebl8])
 	ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 	ebl4 = Conv2D(40, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl4)
 
+	# Expanding Block 3
 	ebl3 = Conv2D(24, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl4))
-	ebl3 = Concatenate(axis=3) ([bl3, ebl8])
+	ebl3 = Concatenate(axis=3)([bl3, ebl8])
 	ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 	ebl3 = Conv2D(24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl3)
 
+	# Expanding Block 2
 	ebl2 = Conv2D(16, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(ebl3))
-	ebl2 = Concatenate(axis=3) ([bl2, ebl8])
+	ebl2 = Concatenate(axis=3)([bl2, ebl8])
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 	ebl2 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(ebl2)
 
-	# # Block 8
+	# # Expanding Block 8
 	# ebl8 = mb_conv_n(bl9, 320, expansion_factor=6)
 	#
-	# # Block 7
+	# # Expanding Block 7
 	# ebl7 = mb_conv_n(ebl8, 192, expansion_factor=6, kernel_size=5)
 	#
-	# # Block 6
+	# # Expanding Block 6
 	# ebl6 = mb_conv_n(ebl7, 112, expansion_factor=6, kernel_size=5)
 	#
-	# # Block 5
+	# # Expanding Block 5
 	# ebl5 = mb_conv_n(ebl6, 80, expansion_factor=6)
 	#
-	# # Block 4
+	# # Expanding Block 4
 	# ebl4 = mb_conv_n(ebl5, 40, expansion_factor=6, kernel_size=5)
 	#
-	# # Block 3
+	# # Expanding Block 3
 	# ebl3 = mb_conv_n(ebl4, 24, expansion_factor=6)
 	#
-	# # Block 2
+	# # Expanding Block 2
 	# ebl2 = mb_conv_n(ebl3, 16)
+
+	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
+
+	return Model(i_s, output)
+
+
+def get_efficientnet_as_unet(input_shape):
+	# https://towardsdatascience.com/complete-architectural-details-of-all-efficientnet-models-5fd5b736142
+	# https://python.plainenglish.io/implementing-efficientnet-in-pytorch-part-3-mbconv-squeeze-and-excitation-and-more-4ca9fd62d302
+	i_s = Input(input_shape)
+
+	def c_bn_a(input_shape, filters, kernel_size=3, act=True):
+		c2d = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding='same')(input_shape)
+		bn = tf.keras.layers.BatchNormalization()(c2d)
+		a = tf.nn.silu(bn) if act else tf.identity(bn)
+
+		return a
+
+	def s_e(input_shape, filters, r=24):
+		# For other output sizes in Keras, you need to use AveragePooling2D, but you can't specify the output shape directly. You need to calculate/define the pool_size, stride, and padding parameters depending on how you want the output shape. If you need help with the calculations, check this page of CS231n course.
+		# https://cs231n.github.io/convolutional-networks/#pool
+		r = filters if filters < r * 2 else 24
+
+		# o = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(input_shape)
+
+		# ap2d = tf.keras.layers.AveragePooling2D()(input_shape)
+		ap2d = tf.nn.avg_pool2d(input_shape, 2, 1, 'SAME')
+		c2d1 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(ap2d)
+		a1 = tf.nn.silu(c2d1)
+		c2d2 = tf.keras.layers.Conv2D(filters // r, kernel_size=1)(a1)
+		a2 = tf.keras.activations.sigmoid(c2d2)
+
+		return input_shape * a2
+		# return o * a2
+
+	def mb_conv_n(input_shape, filters, expansion_factor=1, kernel_size=3, p=0):
+		# MBConv with an expansion factor of N, plus squeeze-and-excitation
+		expanded = expansion_factor * input_shape.shape[3]
+
+		expand_pw = tf.identity(input_shape) if (expansion_factor == 1) else c_bn_a(input_shape, expanded, kernel_size=1)
+		depthwise = c_bn_a(expand_pw, expanded, kernel_size=kernel_size)
+		se = s_e(depthwise, filters)
+		reduce_pw = c_bn_a(se, filters, kernel_size=1, act=False)
+
+		return reduce_pw
+
+
+
+	# def inverted_residual_block(input_shape, expand=64, squeeze=16):
+	# 	# https://towardsdatascience.com/efficientnet-scaling-of-convolutional-neural-networks-done-right-3fde32aef8ff
+	# 	c2d1 = tf.keras.layers.Conv2D(expand, kernel_size=1, activation='relu')(input_shape)
+	# 	dc2d = tf.keras.layers.DepthwiseConv2D(kernel_size=3, activation='relu')(c2d1)
+	# 	c2d2 = tf.keras.layers.Conv2D(squeeze, kernel_size=1, activation='relu')(dc2d)
+	# 	ad = tf.keras.layers.Add()([c2d2, input_shape])
+	#
+	# 	return ad
+
+	# Use pool operations if you are using concatenate (as unet)
+	# Contracting Path
+	# Block 1
+	bl1 = tf.keras.layers.Conv2D(32, kernel_size=3, padding='same')(i_s)
+
+	# Block 2
+	bl2 = mb_conv_n(bl1, 16)
+	# pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl2)
+
+	# Block 3
+	bl3 = mb_conv_n(bl2, 24, expansion_factor=6)
+	# pool3 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl3)
+
+	# Block 4
+	bl4 = mb_conv_n(bl3, 40, expansion_factor=6, kernel_size=5)
+	# pool4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl4)
+
+	# Block 5
+	bl5 = mb_conv_n(bl4, 80, expansion_factor=6)
+	# pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl5)
+
+	# Block 6
+	bl6 = mb_conv_n(bl5, 112, expansion_factor=6, kernel_size=5)
+	# pool6 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl6)
+
+	# Block 7
+	bl7 = mb_conv_n(bl6, 192, expansion_factor=6, kernel_size=5)
+	# pool7 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl7)
+
+	# Block 8
+	bl8 = mb_conv_n(bl7, 320, expansion_factor=6)
+	# pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(bl8)
+
+	# Block 9
+	c9 = tf.keras.layers.Conv2D(1280, kernel_size=1)(bl8)
+	p9 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))(c9)
+	# p9 = tf.keras.layers.GlobalAveragePooling2D()(c9)
+	bl9 = tf.keras.layers.Dense(1280)(p9)
+
+	# Expanding path
+	# Expanding Block 8
+	ebl8 = mb_conv_n(bl9, 320, expansion_factor=6)
+
+	# Expanding Block 7
+	ebl7 = mb_conv_n(ebl8, 192, expansion_factor=6, kernel_size=5)
+
+	# Expanding Block 6
+	ebl6 = mb_conv_n(ebl7, 112, expansion_factor=6, kernel_size=5)
+
+	# Expanding Block 5
+	ebl5 = mb_conv_n(ebl6, 80, expansion_factor=6)
+
+	# Expanding Block 4
+	ebl4 = mb_conv_n(ebl5, 40, expansion_factor=6, kernel_size=5)
+
+	# Expanding Block 3
+	ebl3 = mb_conv_n(ebl4, 24, expansion_factor=6)
+
+	# Expanding Block 2
+	ebl2 = mb_conv_n(ebl3, 16)
 
 	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
 
