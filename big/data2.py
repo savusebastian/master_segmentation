@@ -99,13 +99,13 @@ if __name__ == '__main__':
 	# -- Train Dataset -- #
 	dataset['train'] = dataset['train'].map(load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 	dataset['train'] = dataset['train'].shuffle(buffer_size=BUFFER_SIZE, seed=SEED)
-	dataset['train'] = dataset['train'].repeat()
+	# dataset['train'] = dataset['train'].repeat()
 	dataset['train'] = dataset['train'].batch(BATCH_SIZE)
 	dataset['train'] = dataset['train'].prefetch(buffer_size=AUTOTUNE)
 
 	# -- Validation Dataset -- #
 	dataset['val'] = dataset['val'].map(load_image_test)
-	dataset['val'] = dataset['val'].repeat()
+	# dataset['val'] = dataset['val'].repeat()
 	dataset['val'] = dataset['val'].batch(BATCH_SIZE)
 	dataset['val'] = dataset['val'].prefetch(buffer_size=AUTOTUNE)
 
