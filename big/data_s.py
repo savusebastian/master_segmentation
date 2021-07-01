@@ -9,7 +9,6 @@ from tensorflow.keras.models import Model
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import tensorflow_datasets as tfds
 
 from model import *
 
