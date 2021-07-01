@@ -356,7 +356,7 @@ def model_ion():
 	inputs = tf.keras.layers.Input(shape=(256, 256, 3))
 	#inputs = img_augmentation(inputs)
 	outputs = tf.keras.applications.EfficientNetB0(include_top=False, weights=None, classes=2)(inputs)
-	outputs = tf.keras.layers.GlobalAveragePooling2D()(outputs)
+	# outputs = tf.keras.layers.GlobalAveragePooling2D()(outputs)
 	outputs = tf.keras.layers.Dropout(0.2)(outputs)
 	outputs = tf.keras.layers.Dense(2, activation='softmax')(outputs)
 
