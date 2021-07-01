@@ -353,12 +353,12 @@ def get_efficientnet_unet(input_shape):
 
 
 def model_ion():
-	inputs = layers.Input(shape=(256, 256, 3))
+	inputs = tf.keras.layers.Input(shape=(256, 256, 3))
 	#inputs = img_augmentation(inputs)
-	outputs = EfficientNetB0(include_top=False, weights=None, classes=2)(inputs)
-	outputs = layers.GlobalAveragePooling2D()(outputs)
-	outputs = layers.Dropout(0.2)(outputs)
-	outputs = layers.Dense(2, activation='softmax')(outputs)
+	outputs = tf.keras.applications.EfficientNetB0(include_top=False, weights=None, classes=2)(inputs)
+	outputs = tf.keras.layers.GlobalAveragePooling2D()(outputs)
+	outputs = tf.keras.layers.Dropout(0.2)(outputs)
+	outputs = tf.keras.layers.Dense(2, activation='softmax')(outputs)
 
 	return Model(inputs, outputs)
 
