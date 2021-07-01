@@ -13,11 +13,11 @@ from tensorflow.keras.layers.experimental import preprocessing
 
 
 # http://download.tensorflow.org/example_images/flower_photos.tgz
-data_train = 'aerial_image_dataset/training/images'
-data_test = 'aerial_image_dataset/validation/images'
+data_train = './aerial_image_dataset/training/images'
+data_test = './aerial_image_dataset/validation/images'
 
-# data_train = pathlib.Path(data_train)
-# data_test = pathlib.Path(data_test)
+data_train = pathlib.Path(data_train)
+data_test = pathlib.Path(data_test)
 
 batch_size = 32
 img_height = 256
