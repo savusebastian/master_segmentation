@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 
+# http://www.andreageremia.it/tutorial_matrix.html
 def conv_block(inputs, filters, pool=True):
 	x = Conv2D(filters, 3, padding='same')(inputs)
 	x = BatchNormalization()(x)
