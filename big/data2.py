@@ -118,14 +118,32 @@ if __name__ == '__main__':
 	VALIDATION_STEPS = VALSET_SIZE // BATCH_SIZE
 	input_size = (IMG_SIZE, IMG_SIZE, N_CHANNELS)
 
-	# model = build_unet((256, 256, 3), 1)
+	# model = build_unet(input_size, 1)
 	# model = get_unet(input_size)
-	model = get_efficientnet_unet(input_size)
-	# model = get_efficientnet_as_unet(input_size)
+	# model = get_efficientnet_unet(input_size)
+	# # model = get_efficientnet_as_unet(input_size)
+	#
+	# model.compile(optimizer=Adam(learning_rate=0.001), loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
+	# model.summary()
+	# # model_checkpoint = ModelCheckpoint('unet-{epoch:02d}.hdf5', monitor='loss', verbose=1)
+	# model_checkpoint = ModelCheckpoint('efficientnet.hdf5', monitor='loss', verbose=1)
+	# # model_checkpoint = ModelCheckpoint('efficientnet_as_unet.hdf5', monitor='loss', verbose=1)
+	# results = model.fit(dataset['train'], epochs=EPOCHS, steps_per_epoch=STEPS_PER_EPOCH, validation_steps=VALIDATION_STEPS, validation_data=dataset['val'], callbacks=[model_checkpoint])
 
-	model.compile(optimizer=Adam(learning_rate=0.001), loss=tf.keras.losses.BinaryCrossentropy(), metrics=['accuracy'])
+
+	# Model
+	model = model_ion()
 	model.summary()
-	# model_checkpoint = ModelCheckpoint('unet-{epoch:02d}.hdf5', monitor='loss', verbose=1)
-	model_checkpoint = ModelCheckpoint('efficientnet.hdf5', monitor='loss', verbose=1)
-	# model_checkpoint = ModelCheckpoint('efficientnet_as_unet.hdf5', monitor='loss', verbose=1)
-	results = model.fit(dataset['train'], epochs=EPOCHS, steps_per_epoch=STEPS_PER_EPOCH, validation_steps=VALIDATION_STEPS, validation_data=dataset['val'], callbacks=[model_checkpoint])
+
+	model.compile(
+		optimizer='adam',
+		loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+		metrics=['accuracy']
+	)
+
+	epochs = 50
+	history = model.fit(
+		dataset['train'],
+		validation_data=dataset['val'],
+		epochs=epochs
+	)

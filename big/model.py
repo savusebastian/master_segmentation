@@ -352,6 +352,17 @@ def get_efficientnet_unet(input_shape):
 # 	return Model(i_s, output)
 
 
+def model_ion():
+	inputs = layers.Input(shape=(256, 256, 3))
+	#inputs = img_augmentation(inputs)
+	outputs = EfficientNetB0(include_top=False, weights=None, classes=2)(inputs)
+	outputs = layers.GlobalAveragePooling2D()(outputs)
+	outputs = layers.Dropout(0.2)(outputs)
+	outputs = layers.Dense(2, activation='softmax')(outputs)
+
+	return Model(inputs, outputs)
+
+
 # def EfficientNet(width_coefficient, depth_coefficient, default_size, dropout_rate=0.2, drop_connect_rate=0.2, depth_divisor=8, activation='swish', blocks_args='default', model_name='efficientnet', include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=2, classifier_activation='softmax'):
 # 	def block(inputs, activation='swish', drop_rate=0., name='', filters_in=32, filters_out=16, kernel_size=3, strides=1, expand_ratio=1, se_ratio=0., id_skip=True):
 # 		bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
