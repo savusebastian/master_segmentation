@@ -16,7 +16,7 @@ from model_s import *
 SEED = 42
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 # Image size that we are going to use
-IMG_SIZE = 256
+IMG_SIZE = 512
 # Our images are RGB (3 channels)
 N_CHANNELS = 3
 # Scene Parsing has 150 classes + `not labeled`
@@ -48,8 +48,10 @@ def normalize(input_image: tf.Tensor, input_mask: tf.Tensor) -> tuple:
 
 @tf.function
 def load_image_train(datapoint: dict) -> tuple:
-	input_image = tf.image.resize(datapoint['image'], (256, 256))
-	input_mask = tf.image.resize(datapoint['segmentation_mask'], (256, 256))
+	# input_image = tf.image.resize(datapoint['image'], (256, 256))
+	# input_mask = tf.image.resize(datapoint['segmentation_mask'], (256, 256))
+	input_image = datapoint['image']
+	input_mask = datapoint['segmentation_mask']
 
 	if tf.random.uniform(()) > 0.5:
 		input_image = tf.image.flip_left_right(input_image)
@@ -62,8 +64,10 @@ def load_image_train(datapoint: dict) -> tuple:
 
 @tf.function
 def load_image_test(datapoint: dict) -> tuple:
-	input_image = tf.image.resize(datapoint['image'], (256, 256))
-	input_mask = tf.image.resize(datapoint['segmentation_mask'], (256, 256))
+	# input_image = tf.image.resize(datapoint['image'], (256, 256))
+	# input_mask = tf.image.resize(datapoint['segmentation_mask'], (256, 256))
+	input_image = datapoint['image']
+	input_mask = datapoint['segmentation_mask']
 	input_image, input_mask = normalize(input_image, input_mask)
 
 	return input_image, input_mask
