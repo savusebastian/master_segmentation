@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from model import *
+from model_s import *
 
 
 if __name__ == '__main__':
