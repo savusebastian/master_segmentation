@@ -31,6 +31,6 @@ if __name__ == '__main__':
 			# folder = m_histograma(b, a)
 			img = Image.new('RGB', (size, size), 255)
 			img.paste(piece)
-			img.save(f'./aerial_image_dataset_1024/training/images/{filename}{k + 1}.png')
+			img.save(f'aerial_image_dataset_1024/{filename}{k + 1}.png')
 
 	print(f'Ready: {round(time() - start_time, 2)}')
