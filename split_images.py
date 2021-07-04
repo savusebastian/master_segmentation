@@ -21,6 +21,7 @@ if __name__ == '__main__':
 	# test_directory_gt = glob.glob('~/Desktop/AerialImageDataset/test/gt/*.tif')
 	# test_directory_images = glob.glob('~/Desktop/AerialImageDataset/test/images/*.tif')
 	size = 1024
+	index = 0
 
 	for infile in train_directory:
 		filename = infile.split('/')[-1].split('.')[0]
@@ -28,9 +29,10 @@ if __name__ == '__main__':
 		start_num = 0
 
 		for k, (piece, a, b) in enumerate(crop_image(im, size), start_num):
+			index += 1
 			# folder = m_histograma(b, a)
 			img = Image.new('RGB', (size, size), 255)
 			img.paste(piece)
-			img.save(f'{filename}{k + 1}.png')
+			img.save(f'big/aerial_image_dataset_1024/training/images/{filename}{index}.png')
 
 	print(f'Ready: {round(time() - start_time, 2)}')
