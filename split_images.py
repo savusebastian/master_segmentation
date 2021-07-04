@@ -18,8 +18,8 @@ def crop_image(im, size):
 if __name__ == '__main__':
 	start_time = time()
 	# train_directory = glob.glob('../../../Desktop/AerialImageDataset/train/images/*.tif')
-	# test_directory_gt = glob.glob('../../../Desktop/AerialImageDataset/test/gt/*.tif')
-	test_directory_images = glob.glob('../../../Desktop/AerialImageDataset/test/images/*.tif')
+	# test_directory_images = glob.glob('../../../Desktop/AerialImageDataset/test/images/*.tif')
+	test_directory_gt = glob.glob('../../../Desktop/AerialImageDataset/test/gt/*.tif')
 	size = 1024
 	index = 0
 
@@ -33,6 +33,6 @@ if __name__ == '__main__':
 			# folder = m_histograma(b, a)
 			img = Image.new('RGB', (size, size), 255)
 			img.paste(piece)
-			img.save(f'big/aerial_image_dataset_1024/validation/images/{filename}{index}.png')
+			img.save(f'big/aerial_image_dataset_1024/validation/gt/{filename}{index}.png')
 
 	print(f'Ready: {round(time() - start_time, 2)}')
