@@ -164,8 +164,8 @@ if __name__ == '__main__':
 	plt.show()
 
 	# Plot Accuracy vs Epoch
-	acc = results.history['acc']
-	val_acc = results.history['val_acc']
+	acc = results.history['accuracy']
+	val_acc = results.history['val_accuracy']
 	epochs = range(len(acc))
 	plt.figure()
 	plt.title('Training and validation accuracy')
