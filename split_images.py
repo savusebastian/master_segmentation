@@ -23,7 +23,7 @@ if __name__ == '__main__':
 	size = 1024
 	index = 0
 
-	for infile in test_directory_images:
+	for infile in test_directory_gt:
 		filename = infile.split('/')[-1].split('.')[0]
 		im = Image.open(infile)
 		start_num = 0
