@@ -17,7 +17,8 @@ def crop_image(im, size):
 
 if __name__ == '__main__':
 	start_time = time()
-	train_directory = glob.glob('~/Desktop/AerialImageDataset/train/*.tif')
+	train_directory = glob.glob('/home/Desktop/AerialImageDataset/train/images/*.tif')
+	print(train)
 	# test_directory_gt = glob.glob('~/Desktop/AerialImageDataset/test/gt/*.tif')
 	# test_directory_images = glob.glob('~/Desktop/AerialImageDataset/test/images/*.tif')
 	size = 1024
