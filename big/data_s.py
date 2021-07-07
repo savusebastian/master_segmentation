@@ -75,7 +75,7 @@ def load_image_test(datapoint: dict) -> tuple:
 
 if __name__ == '__main__':
 	print(AUTOTUNE)
-	dataset_path = 'aerial_image_dataset/'
+	dataset_path = 'aerial_image_dataset_1024/'
 	training_data = 'training/'
 	val_data = 'validation/'
 
