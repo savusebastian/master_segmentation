@@ -91,7 +91,7 @@ if __name__ == '__main__':
 	val_dataset = tf.data.Dataset.list_files(dataset_path + val_data + 'images/*.png', seed=SEED)
 	val_dataset = val_dataset.map(parse_image)
 
-	BATCH_SIZE = 2
+	BATCH_SIZE = 4
 
 	# for reference about the BUFFER_SIZE in shuffle:
 	# https://stackoverflow.com/questions/46444018/meaning-of-buffer-size-in-dataset-map-dataset-prefetch-and-dataset-shuffle
