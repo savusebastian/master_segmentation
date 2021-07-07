@@ -17,12 +17,12 @@ def crop_image(im, size):
 
 if __name__ == '__main__':
 	start_time = time()
-	train_directory = glob.glob('../../../Desktop/AerialImageDataset/train/images/*.tif')
-	# test_directory_gt = glob.glob('../../../Desktop/AerialImageDataset/train/gt/*.tif')
+	# train_directory = glob.glob('../../../Desktop/AerialImageDataset/train/images/*.tif')
+	train_directory_gt = glob.glob('../../../Desktop/AerialImageDataset/train/gt/*.tif')
 	size = 512
 	index = 0
 
-	for infile in train_directory:
+	for infile in train_directory_gt:
 		filename = infile.split('/')[-1].split('.')[0]
 		im = Image.open(infile)
 		start_num = 0
