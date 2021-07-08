@@ -228,7 +228,7 @@ def get_efficientnet_unet(input_shape):
 
 	output = Conv2D(1, 1, activation='sigmoid')(ebl2)
 
-	# 1024 -> acc - , loss -
+	# 1024 -> acc -0.928 , loss - 0.18
 	# 512 -> acc - 0.93, loss - 0.18
 	# 512 -> 256 -> acc - 0.91, loss - 0.21
 	return Model(i_s, output)
