@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	imgs_mask_test = model.predict(img)
 	imgs_mask_test = imgs_mask_test[0, :, :, 0]
 
-	mask = np.floor(imgs_mask_test * 255)
+	# mask = np.floor(imgs_mask_test * 255)
 
 	imgs_mask_test[imgs_mask_test <= 0.5] = 0
 	imgs_mask_test[imgs_mask_test > 0.5] = 1
