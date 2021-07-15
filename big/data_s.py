@@ -16,7 +16,7 @@ from model_s import *
 SEED = 42
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 # Image size that we are going to use
-IMG_SIZE = 512
+IMG_SIZE = 1024
 # Our images are RGB (3 channels)
 N_CHANNELS = 3
 # Scene Parsing has 150 classes + `not labeled`
@@ -75,7 +75,7 @@ def load_image_test(datapoint: dict) -> tuple:
 
 if __name__ == '__main__':
 	print(AUTOTUNE)
-	dataset_path = 'aerial_image_dataset/'
+	dataset_path = 'aerial_image_dataset_1024/'
 	training_data = 'training/'
 	val_data = 'validation/'
 
