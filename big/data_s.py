@@ -16,11 +16,53 @@ from model_s import *
 SEED = 42
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 # Image size that we are going to use
-IMG_SIZE = 1024
+IMG_SIZE = 512
 # Our images are RGB (3 channels)
 N_CHANNELS = 3
 # Scene Parsing has 150 classes + `not labeled`
 N_CLASSES = 1
+
+
+def calc_iou_plot(train, valid):
+	# Make sure mask is binary for IOU calculation
+	size = len(valid)
+	# y_train_mod = np.zeros((size, im_width, im_height), dtype=np.int32)
+	y_train_mod = train.squeeze() > binarize
+
+	# Set up Predicted Mask for IOU calculation
+	preds_train_mod = np.zeros((size, 128, 128), dtype=np.int32)
+	preds_train_sq = preds_train.squeeze()
+
+	thresholds = np.linspace(0.0001, 1, 50)
+	ious = np.zeros(len(thresholds))
+	count = 0
+
+	for threshold in thresholds:
+		for i in range(size):
+			preds_train_mod[i, :, :] = np.where(preds_train_sq[i, :, :] > threshold, 1, 0)
+
+	iou = np.zeros(size)
+
+	for i in range(size):
+		intersection = np.logical_and(y_train_mod[i, :, :], preds_train_mod[i, :, :])
+		union = np.logical_or(y_train_mod[i, :, :], preds_train_mod[i, :, :])
+		iou[i] = np.sum(intersection) / np.sum(union)
+
+	ious[count] = np.mean(iou)
+	count += 1
+
+	threshold_best_index = np.argmax(ious)
+	iou_best = ious[threshold_best_index]
+	threshold_best = thresholds[threshold_best_index]
+
+	plt.figure()
+	plt.title(f'Training Thresh vs IoU {threshold_best}, {iou_best}')
+	plt.plot(thresholds, ious)
+	plt.plot(threshold_best, iou_best, label='Best threshold')
+	plt.xlabel('Threshold')
+	plt.ylabel('IoU')
+	plt.legend()
+	plt.show()
 
 
 def parse_image(img_path: str) -> dict:
@@ -91,7 +133,8 @@ if __name__ == '__main__':
 	val_dataset = tf.data.Dataset.list_files(dataset_path + val_data + 'images/*.png', seed=SEED)
 	val_dataset = val_dataset.map(parse_image)
 
-	BATCH_SIZE = 2
+	# Batch size of 2 for 1024
+	BATCH_SIZE = 4
 
 	# for reference about the BUFFER_SIZE in shuffle:
 	# https://stackoverflow.com/questions/46444018/meaning-of-buffer-size-in-dataset-map-dataset-prefetch-and-dataset-shuffle
@@ -102,13 +145,13 @@ if __name__ == '__main__':
 	# -- Train Dataset -- #
 	dataset['train'] = dataset['train'].map(load_image_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 	dataset['train'] = dataset['train'].shuffle(buffer_size=BUFFER_SIZE, seed=SEED)
-	dataset['train'] = dataset['train'].repeat()
+	# dataset['train'] = dataset['train'].repeat()
 	dataset['train'] = dataset['train'].batch(BATCH_SIZE)
 	dataset['train'] = dataset['train'].prefetch(buffer_size=AUTOTUNE)
 
 	# -- Validation Dataset -- #
 	dataset['val'] = dataset['val'].map(load_image_test)
-	dataset['val'] = dataset['val'].repeat()
+	# dataset['val'] = dataset['val'].repeat()
 	dataset['val'] = dataset['val'].batch(BATCH_SIZE)
 	dataset['val'] = dataset['val'].prefetch(buffer_size=AUTOTUNE)
 
@@ -173,3 +216,18 @@ if __name__ == '__main__':
 	plt.plot(epochs, val_acc, label='Validation acc')
 	plt.legend()
 	plt.show()
+
+	# Calc iou
+	model.evaluate(X_test, y_test, verbose=2)
+	preds_test = model.predict(dataset['val'], verbose=2)
+
+	ix = np.random.randint(len(dataset['val']))
+	threshold = .4082
+	binarize = .1
+	intersection = np.logical_and(dataset['val'][ix].squeeze() > binarize, preds_test[ix].squeeze() > threshold)
+	union = np.logical_or(dataset['val'][ix].squeeze() > binarize, preds_test[ix].squeeze() > threshold)
+	iou = np.sum(intersection) / np.sum(union)
+	print('IOU:', iou)
+
+	# Comment dataset.repeat() lines
+	calc_iou_plot(dataset['train'], dataset['val'])
