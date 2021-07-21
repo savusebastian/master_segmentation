@@ -219,7 +219,7 @@ if __name__ == '__main__':
 	plt.show()
 
 	# Calc iou
-	model.evaluate(X_test, y_test, verbose=2)
+	model.evaluate(dataset['train'], dataset['val'], verbose=2)
 	preds_test = model.predict(dataset['val'], verbose=2)
 
 	ix = np.random.randint(len(dataset['val']))
