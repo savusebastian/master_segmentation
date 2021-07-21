@@ -30,7 +30,7 @@ def calc_iou_plot(train, valid):
 	y_train_mod = train.squeeze() > binarize
 
 	# Set up Predicted Mask for IOU calculation
-	preds_train_mod = np.zeros((size, 128, 128), dtype=np.int32)
+	preds_train_mod = np.zeros((size, 512, 512), dtype=np.int32)
 	preds_train_sq = preds_train.squeeze()
 
 	thresholds = np.linspace(0.0001, 1, 50)
@@ -117,7 +117,8 @@ def load_image_test(datapoint: dict) -> tuple:
 
 if __name__ == '__main__':
 	print(AUTOTUNE)
-	dataset_path = 'aerial_image_dataset_1024/'
+	# dataset_path = 'aerial_image_dataset_1024/'
+	dataset_path = 'aerial_image_dataset/'
 	training_data = 'training/'
 	val_data = 'validation/'
 
